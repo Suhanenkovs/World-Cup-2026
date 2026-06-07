@@ -13,19 +13,29 @@ export default function JoinPage() {
   const [loading, setLoading] = useState(false);
   const [sessionReady, setSessionReady] = useState(false);
 
-  // Supabase puts the recovery/invite tokens in the URL hash; the client SDK
-  // exchanges them automatically when the page loads.
   useEffect(() => {
     const supabase = createClient();
-    supabase.auth.onAuthStateChange((event) => {
-      if (event === "PASSWORD_RECOVERY" || event === "SIGNED_IN") {
-        setSessionReady(true);
+
+    async function exchange() {
+      // PKCE flow: invite link contains ?code=
+      const code = new URLSearchParams(window.location.search).get("code");
+      if (code) {
+        const { error } = await supabase.auth.exchangeCodeForSession(code);
+        if (!error) { setSessionReady(true); return; }
       }
-    });
-    // Also check existing session (user may have already exchanged the token)
-    supabase.auth.getSession().then(({ data }) => {
-      if (data.session) setSessionReady(true);
-    });
+      // Legacy hash flow or already-established session
+      const { data } = await supabase.auth.getSession();
+      if (data.session) { setSessionReady(true); return; }
+
+      // Fall back to auth state change
+      supabase.auth.onAuthStateChange((event) => {
+        if (event === "SIGNED_IN" || event === "PASSWORD_RECOVERY") {
+          setSessionReady(true);
+        }
+      });
+    }
+
+    exchange();
   }, []);
 
   async function handleSubmit(e: React.FormEvent) {
