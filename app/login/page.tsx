@@ -31,9 +31,10 @@ export default function LoginPage() {
     <div className="min-h-[80vh] flex items-center justify-center px-4">
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
-          <div className="text-4xl mb-2">⚽</div>
-          <h1 className="text-2xl font-bold text-white">Sign in</h1>
-          <p className="text-gray-400 text-sm mt-1">WC 2026 Predictions</p>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/world-cup-trophy.png" alt="" className="w-20 h-20 object-contain mx-auto mb-3" />
+          <h1 className="text-2xl font-bold text-white">FIFA World Cup 2026</h1>
+          <p className="text-gray-400 text-sm mt-1">Sign in to your account</p>
         </div>
 
         <form onSubmit={handleSubmit} className="bg-gray-900 rounded-xl border border-gray-800 p-6 flex flex-col gap-4">
