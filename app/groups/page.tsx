@@ -21,7 +21,7 @@ interface FDTableRow {
   goalDifference: number;
   points: number;
 }
-interface FDGroup { group: string; table: FDTableRow[] }
+interface FDGroup { group: string; table: FDTableRow[]; type: string }
 
 async function fetchStandings(): Promise<FDGroup[]> {
   try {

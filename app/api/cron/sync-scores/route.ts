@@ -102,8 +102,8 @@ export async function GET(request: NextRequest) {
   let scored = 0;
 
   for (const db of dbMatches) {
-    const homeName = (db.home_team as { name: string } | null)?.name;
-    const awayName = (db.away_team as { name: string } | null)?.name;
+    const homeName = (db.home_team as unknown as { name: string } | null)?.name;
+    const awayName = (db.away_team as unknown as { name: string } | null)?.name;
     if (!homeName || !awayName) continue;
 
     // Match by full name, short name, or 3-letter code
