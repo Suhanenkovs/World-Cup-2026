@@ -27,6 +27,10 @@ export default function LoginPage() {
     }
   }
 
+  function handleKeyDown(e: React.KeyboardEvent) {
+    if (e.key === "Enter") handleSubmit(e as unknown as React.FormEvent);
+  }
+
   return (
     <div className="min-h-[80vh] flex items-center justify-center px-4">
       <div className="w-full max-w-sm">
@@ -37,7 +41,7 @@ export default function LoginPage() {
           <p className="text-gray-400 text-sm mt-1">Sign in to your account</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="bg-gray-900 rounded-xl border border-gray-800 p-6 flex flex-col gap-4">
+        <form onSubmit={handleSubmit} onKeyDown={handleKeyDown} className="bg-gray-900 rounded-xl border border-gray-800 p-6 flex flex-col gap-4">
           {error && (
             <div className="bg-red-900/40 border border-red-700 text-red-300 text-sm rounded-lg px-4 py-3">
               {error}
