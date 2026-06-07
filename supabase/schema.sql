@@ -171,7 +171,5 @@ insert into public.bonus_questions (question, category, max_points) values
   ('Who will reach the Final (either team)?',                             'Tournament',  12),
   ('Who will win the Golden Boot (top scorer)?',                          'Awards',      15),
   ('How many goals will the top scorer score? (exact number)',            'Awards',      10),
-  ('Which host nation (USA / Canada / Mexico) will go furthest?',         'Tournament',   8),
   ('What will be the total number of goals scored in the tournament?',    'Stats',       12),
-  ('Which team will score the most goals in the group stage?',            'Stats',        8),
-  ('Will there be a red card in the Final? (Yes / No)',                   'Stats',        5);
+  ('Which team will score the most goals in the group stage?',            'Stats',        8);
