@@ -189,7 +189,7 @@ export default async function BracketPage() {
 
   return (
     <div className="max-w-screen-2xl mx-auto px-4 py-8">
-      <h1 className="text-2xl font-bold text-white mb-6">Knockout Bracket</h1>
+      <h1 className="text-2xl font-bold text-white mb-6">Knockout Stage</h1>
 
       {/* ── Desktop full bracket tree ──────────────────────────────────── */}
       <div className="hidden md:block overflow-x-auto pb-6">
