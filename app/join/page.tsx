@@ -36,14 +36,14 @@ export default function JoinPage() {
 
       if (!session || cancelled) return;
 
-      // If registration already complete (has username), skip form
+      // If registration already complete, skip form
       const { data: profile } = await supabase
         .from("profiles")
-        .select("username")
+        .select("onboarded")
         .eq("id", session.user.id)
         .single();
 
-      if (profile?.username) {
+      if (profile?.onboarded) {
         router.replace("/predictions");
         return;
       }

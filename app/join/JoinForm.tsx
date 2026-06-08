@@ -25,7 +25,10 @@ export default function JoinForm() {
 
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
-        await supabase.from("profiles").update({ username: username.trim() }).eq("id", user.id);
+        await supabase
+          .from("profiles")
+          .update({ username: username.trim(), onboarded: true })
+          .eq("id", user.id);
       }
 
       router.push("/predictions");
