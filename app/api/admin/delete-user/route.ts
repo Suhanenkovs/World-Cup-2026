@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server";
 import { createClient, createServiceClient } from "@/lib/supabase/server";
 
-const PERMANENT_ADMINS = ["suhinsh@inbox.lv", "k.suhanenkovs@inbox.lv"];
+const PERMANENT_ADMINS = ["k.suhanenkovs@inbox.lv"];
 
 export async function POST(request: NextRequest) {
   const supabase = await createClient();
