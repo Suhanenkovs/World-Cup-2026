@@ -25,10 +25,11 @@ export default function JoinForm() {
 
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
-        await supabase
+        const { error: profileErr } = await supabase
           .from("profiles")
-          .update({ username: username.trim(), onboarded: true })
+          .update({ username: username.trim() })
           .eq("id", user.id);
+        if (profileErr) { setError("Failed to save username: " + profileErr.message); return; }
       }
 
       router.push("/predictions");
