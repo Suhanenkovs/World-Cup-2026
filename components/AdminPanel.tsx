@@ -335,7 +335,7 @@ export default function AdminPanel({ players, questions, prizeConfig }: Props) {
       <div className="bg-gray-900 border border-gray-800 rounded-xl p-5">
         <h2 className="text-lg font-semibold text-white mb-3">Invite Player</h2>
         <form onSubmit={sendInvite} className="flex flex-col gap-2">
-          <div className="flex gap-2">
+          <div className="flex flex-col sm:flex-row gap-2">
             <input
               type="text"
               required
@@ -354,7 +354,7 @@ export default function AdminPanel({ players, questions, prizeConfig }: Props) {
             />
             <button
               type="submit"
-              className="bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-semibold px-4 py-2 rounded-lg transition-colors shrink-0"
+              className="bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-semibold px-4 py-2 rounded-lg transition-colors sm:shrink-0"
             >
               Send invite
             </button>
@@ -369,16 +369,16 @@ export default function AdminPanel({ players, questions, prizeConfig }: Props) {
         <div className="flex flex-col gap-2">
           {players.filter((p) => !deletedIds.has(p.id)).map((p) => (
             <div key={p.id} className="flex flex-col gap-2 py-3 border-b border-gray-800 last:border-0">
-              <div className="flex items-center justify-between gap-3">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                 <div>
                   <span className="font-medium text-white">
                     {(p as any).name || p.username}
                   </span>
                   <div className="text-xs text-gray-500">{(p as any).email || p.username}</div>
                 </div>
-                <div className="flex items-center gap-2 shrink-0">
+                <div className="flex items-center flex-wrap gap-2">
                   {(payStatus[p.id] || adminStatus[p.id]) && (
-                    <span className="text-xs text-gray-400">{adminStatus[p.id] || payStatus[p.id]}</span>
+                    <span className="text-xs text-gray-400 w-full sm:w-auto">{adminStatus[p.id] || payStatus[p.id]}</span>
                   )}
                   <button
                     onClick={() => toggleAdmin(p.id, p.is_admin)}

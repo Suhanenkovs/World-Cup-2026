@@ -19,7 +19,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <Nav />
         <main className="flex-1">{children}</main>
         <footer className="text-center text-xs text-gray-500 py-4">
-          WC 2026 Predictions &mdash; {new Date().getFullYear()}
+          FIFA World Cup 2026
         </footer>
       </body>
     </html>
