@@ -112,10 +112,10 @@ function CenterCol({ final: finalMatch, third }: {
   return (
     <div className="flex flex-col items-center shrink-0 w-36">
       {/* Top half — pushes Final card to the vertical center */}
-      <div className="flex-1 flex flex-col items-center justify-end pb-3 gap-1">
+      <div className="flex-1 flex flex-col items-center justify-end pb-2 gap-1 min-h-0">
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/world-cup-trophy.png" alt="Trophy" className="w-10 h-10 object-contain opacity-90" />
-        <span className="text-[9px] text-amber-400 font-bold uppercase tracking-widest">Final</span>
+        <img src="/world-cup-trophy.png" alt="Trophy" className="flex-1 w-full object-contain opacity-95 min-h-0" />
+        <span className="text-[9px] text-amber-400 font-bold uppercase tracking-widest shrink-0">Final</span>
       </div>
       {/* Final card — centered at Y=50% of bracket height */}
       <div className="shrink-0">
