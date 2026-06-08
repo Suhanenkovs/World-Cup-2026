@@ -8,7 +8,7 @@ export const revalidate = 60;
 
 // ── football-data.org types ───────────────────────────────────────────────────
 
-interface FDTeam { name: string; shortName: string; tla: string; crest: string }
+interface FDTeam { id: number; name: string; shortName: string; tla: string; crest: string }
 interface FDTableRow {
   position: number;
   team: FDTeam;
@@ -65,14 +65,14 @@ function StandingsTable({ rows }: { rows: FDTableRow[] }) {
             >
               <td className="py-1.5 pl-1 text-gray-500">{row.position}</td>
               <td className="py-1.5">
-                <div className="flex items-center gap-1.5">
+                <Link href={`/teams/${row.team.id}`} className="flex items-center gap-1.5 hover:text-amber-400 transition-colors group">
                   {flagSrc
                     // eslint-disable-next-line @next/next/no-img-element
                     ? <img src={flagSrc} alt={row.team.name} className="w-5 h-3.5 object-cover rounded-sm border border-gray-700 shrink-0" />
                     : <span className="w-5 h-3.5 rounded-sm bg-gray-700 shrink-0 inline-block" />
                   }
-                  <span className="text-white font-medium truncate">{row.team.shortName}</span>
-                </div>
+                  <span className="text-white font-medium truncate group-hover:text-amber-400 transition-colors">{row.team.shortName}</span>
+                </Link>
               </td>
               <td className="py-1.5 text-center text-gray-400">{row.playedGames}</td>
               <td className="py-1.5 text-center text-gray-400">{row.won}</td>

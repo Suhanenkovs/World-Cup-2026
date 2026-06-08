@@ -4,6 +4,7 @@ import { formatInTimeZone } from "date-fns-tz";
 import { STAGE_LABELS, type Stage } from "@/lib/constants";
 import type { MatchWithTeams } from "@/types/database";
 import { getFlagUrl } from "@/lib/teamFlags";
+import Link from "next/link";
 
 export const revalidate = 30;
 
@@ -52,13 +53,25 @@ export default async function MatchDetailPage({
         <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-4">
           {/* Home team */}
           <div className="flex flex-col items-center gap-2">
-            {homeFlagSrc ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={homeFlagSrc} alt={m.home_team?.name ?? ""} className="w-16 h-11 object-cover rounded-md border border-gray-700 shadow" />
+            {m.home_team?.api_id ? (
+              <Link href={`/teams/${m.home_team.api_id}`} className="flex flex-col items-center gap-2 group">
+                {homeFlagSrc
+                  // eslint-disable-next-line @next/next/no-img-element
+                  ? <img src={homeFlagSrc} alt={m.home_team.name} className="w-16 h-11 object-cover rounded-md border border-gray-700 shadow group-hover:border-amber-500/50 transition-colors" />
+                  : <span className="w-16 h-11 rounded-md bg-gray-700 inline-block" />
+                }
+                <div className="font-bold text-white text-lg text-center group-hover:text-amber-400 transition-colors">{m.home_team.name}</div>
+              </Link>
             ) : (
-              <span className="w-16 h-11 rounded-md bg-gray-700 inline-block" />
+              <>
+                {homeFlagSrc
+                  // eslint-disable-next-line @next/next/no-img-element
+                  ? <img src={homeFlagSrc} alt={m.home_team?.name ?? ""} className="w-16 h-11 object-cover rounded-md border border-gray-700 shadow" />
+                  : <span className="w-16 h-11 rounded-md bg-gray-700 inline-block" />
+                }
+                <div className="font-bold text-white text-lg text-center">{m.home_team?.name ?? "TBD"}</div>
+              </>
             )}
-            <div className="font-bold text-white text-lg text-center">{m.home_team?.name ?? "TBD"}</div>
           </div>
 
           {/* Score */}
@@ -80,13 +93,25 @@ export default async function MatchDetailPage({
 
           {/* Away team */}
           <div className="flex flex-col items-center gap-2">
-            {awayFlagSrc ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={awayFlagSrc} alt={m.away_team?.name ?? ""} className="w-16 h-11 object-cover rounded-md border border-gray-700 shadow" />
+            {m.away_team?.api_id ? (
+              <Link href={`/teams/${m.away_team.api_id}`} className="flex flex-col items-center gap-2 group">
+                {awayFlagSrc
+                  // eslint-disable-next-line @next/next/no-img-element
+                  ? <img src={awayFlagSrc} alt={m.away_team.name} className="w-16 h-11 object-cover rounded-md border border-gray-700 shadow group-hover:border-amber-500/50 transition-colors" />
+                  : <span className="w-16 h-11 rounded-md bg-gray-700 inline-block" />
+                }
+                <div className="font-bold text-white text-lg text-center group-hover:text-amber-400 transition-colors">{m.away_team.name}</div>
+              </Link>
             ) : (
-              <span className="w-16 h-11 rounded-md bg-gray-700 inline-block" />
+              <>
+                {awayFlagSrc
+                  // eslint-disable-next-line @next/next/no-img-element
+                  ? <img src={awayFlagSrc} alt={m.away_team?.name ?? ""} className="w-16 h-11 object-cover rounded-md border border-gray-700 shadow" />
+                  : <span className="w-16 h-11 rounded-md bg-gray-700 inline-block" />
+                }
+                <div className="font-bold text-white text-lg text-center">{m.away_team?.name ?? "TBD"}</div>
+              </>
             )}
-            <div className="font-bold text-white text-lg text-center">{m.away_team?.name ?? "TBD"}</div>
           </div>
         </div>
       </div>
