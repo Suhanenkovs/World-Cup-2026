@@ -4,24 +4,9 @@ import { useState, useTransition, useEffect, useRef } from "react";
 import { createClient } from "@/lib/supabase/client";
 import type { BonusQuestion, BonusAnswer } from "@/types/database";
 
-// ── Input type detection ──────────────────────────────────────────────────────
+// ── Input type ────────────────────────────────────────────────────────────────
 
-type AnswerType = "team" | "player" | "number" | "yesno" | "text";
-
-const HOST_NATIONS = ["United States", "Canada", "Mexico"];
-
-function getAnswerType(question: string): AnswerType {
-  const q = question.toLowerCase();
-  if (q.includes("yes / no") || q.includes("yes/no") || q.includes("(yes") || q.includes("will there be")) return "yesno";
-  if (q.includes("how many") || q.includes("total number") || q.includes("exact number")) return "number";
-  if (q.includes("golden boot") || q.includes("golden glove") || q.includes("top scorer") || q.includes("goalkeeper")) return "player";
-  if (q.includes("which team") || q.includes("who will win") || q.includes("who will reach") || q.includes("host nation")) return "team";
-  return "text";
-}
-
-function isHostNationQuestion(question: string): boolean {
-  return question.toLowerCase().includes("host nation");
-}
+type AnswerType = "team" | "player" | "number" | "yesno" | "text" | "select";
 
 // ── Sub-inputs ────────────────────────────────────────────────────────────────
 
@@ -209,7 +194,7 @@ export default function BonusForm({ questions, answerMap, userId, isLocked, team
         const existing = answerMap[q.id];
         const pts = existing?.points_earned;
         const isResolved = q.resolved_at !== null;
-        const type = getAnswerType(q.question);
+        const type: AnswerType = (q.answer_type as AnswerType) ?? "text";
         const locked = isLocked || isResolved;
 
         return (
@@ -239,8 +224,24 @@ export default function BonusForm({ questions, answerMap, userId, isLocked, team
                   value={answers[q.id] ?? ""}
                   onChange={(v) => setAnswer(q.id, v)}
                   disabled={locked}
-                  teams={isHostNationQuestion(q.question) ? HOST_NATIONS : teamNames}
+                  teams={teamNames}
                 />
+              )}
+              {type === "select" && (
+                <div className="relative flex-1">
+                  <select
+                    value={answers[q.id] ?? ""}
+                    onChange={(e) => setAnswer(q.id, e.target.value)}
+                    disabled={locked}
+                    className={selectCls}
+                  >
+                    <option value="">Select…</option>
+                    {(q.options ?? []).map((opt) => (
+                      <option key={opt} value={opt}>{opt}</option>
+                    ))}
+                  </select>
+                  <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 text-xs">▼</span>
+                </div>
               )}
               {type === "yesno" && (
                 <YesNoSelect

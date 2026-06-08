@@ -57,6 +57,9 @@ export interface BonusQuestionRow {
   correct_answer: string | null;
   resolved_at: string | null;
   created_at: string;
+  answer_type: "text" | "number" | "team" | "player" | "yesno" | "select";
+  options: string[] | null;
+  sort_order: number;
 }
 
 export interface BonusAnswerRow {
