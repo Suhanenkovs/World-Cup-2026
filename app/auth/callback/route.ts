@@ -4,7 +4,8 @@ import { createClient } from "@/lib/supabase/server";
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get("code");
-  const next = searchParams.get("next") ?? "/join";
+  const type = searchParams.get("type");
+  const next = searchParams.get("next") ?? (type === "recovery" ? "/reset-password" : "/join");
 
   if (!code) {
     return NextResponse.redirect(new URL(`${next}?auth_error=no_code`, request.url));
