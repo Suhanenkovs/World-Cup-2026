@@ -160,7 +160,7 @@ export default function BonusForm({ questions, answerMap, userId, isLocked, team
 
   // Fetch players if any question needs them
   useEffect(() => {
-    const needsPlayers = questions.some((q) => getAnswerType(q.question) === "player");
+    const needsPlayers = questions.some((q) => (q.answer_type ?? "text") === "player");
     if (!needsPlayers) return;
     fetch("/api/players").then((r) => r.json()).then((d) => setPlayers(d.players ?? []));
   }, [questions]);

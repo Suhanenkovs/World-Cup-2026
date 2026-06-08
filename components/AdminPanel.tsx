@@ -44,6 +44,14 @@ export default function AdminPanel({ players, questions, prizeConfig }: Props) {
   const [bonusAnswers, setBonusAnswers] = useState<Record<string, string>>({});
   const [bonusStatus, setBonusStatus] = useState<Record<string, string>>({});
   const [autoResolveStatus, setAutoResolveStatus] = useState("");
+
+  // Bonus question management
+  const [bonusQs, setBonusQs] = useState<BonusQuestion[]>(questions);
+  const [editingQ, setEditingQ] = useState<string | null>(null);
+  const [editDraft, setEditDraft] = useState<Partial<BonusQuestion & { optionsText: string }>>({});
+  const [qStatus, setQStatus] = useState<Record<string, string>>({});
+  const [showAddQ, setShowAddQ] = useState(false);
+  const [newQ, setNewQ] = useState({ question: "", category: "", max_points: "10", answer_type: "text" as BonusQuestion["answer_type"], optionsText: "" });
   const [isPending, startTransition] = useTransition();
 
   // Prize config editing state
@@ -187,6 +195,61 @@ export default function AdminPanel({ players, questions, prizeConfig }: Props) {
         `Done — ${resolved.length} resolved, ${skipped.length} need manual input.`
       );
     });
+  }
+
+  function startEditQ(q: BonusQuestion) {
+    setEditingQ(q.id);
+    setEditDraft({ ...q, optionsText: (q.options ?? []).join(", ") });
+  }
+
+  async function saveQ(id: string) {
+    setQStatus((s) => ({ ...s, [id]: "Saving…" }));
+    const options = (editDraft.optionsText ?? "").split(",").map((o) => o.trim()).filter(Boolean);
+    const res = await fetch("/api/admin/bonus-questions", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id, ...editDraft, options }),
+    });
+    const json = await res.json();
+    if (json.success) {
+      setBonusQs((qs) => qs.map((q) => q.id === id
+        ? { ...q, ...editDraft, options: options.length ? options : null } as BonusQuestion
+        : q));
+      setEditingQ(null);
+      setQStatus((s) => ({ ...s, [id]: "Saved ✓" }));
+    } else {
+      setQStatus((s) => ({ ...s, [id]: `Error: ${json.error}` }));
+    }
+  }
+
+  async function deleteQ(id: string, label: string) {
+    if (!confirm(`Delete question "${label}"? This removes all answers too.`)) return;
+    const res = await fetch("/api/admin/bonus-questions", {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id }),
+    });
+    const json = await res.json();
+    if (json.success) setBonusQs((qs) => qs.filter((q) => q.id !== id));
+    else alert(`Error: ${json.error}`);
+  }
+
+  async function addQ(e: React.FormEvent) {
+    e.preventDefault();
+    const options = newQ.optionsText.split(",").map((o) => o.trim()).filter(Boolean);
+    const res = await fetch("/api/admin/bonus-questions", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ...newQ, options }),
+    });
+    const json = await res.json();
+    if (json.success) {
+      setBonusQs((qs) => [...qs, json.question]);
+      setNewQ({ question: "", category: "", max_points: "10", answer_type: "text", optionsText: "" });
+      setShowAddQ(false);
+    } else {
+      alert(`Error: ${json.error}`);
+    }
   }
 
   async function triggerSync() {
@@ -369,67 +432,147 @@ export default function AdminPanel({ players, questions, prizeConfig }: Props) {
         </div>
       </div>
 
-      {/* Bonus question resolution */}
+      {/* Bonus Questions management */}
       <div className="bg-gray-900 border border-gray-800 rounded-xl p-5">
-        <h2 className="text-lg font-semibold text-white mb-1">Bonus Questions</h2>
-        <p className="text-sm text-gray-400 mb-4">
-          Fetches results from football-data.org and scores all answers automatically.
-        </p>
-        <button
-          onClick={autoResolve}
-          disabled={isPending}
-          className="bg-amber-700 hover:bg-amber-600 disabled:opacity-40 text-white text-sm font-semibold px-4 py-2 rounded-lg transition-colors"
-        >
-          {isPending ? "Resolving…" : "Auto-resolve All"}
-        </button>
-        {autoResolveStatus && <p className="text-sm text-gray-400 mt-2">{autoResolveStatus}</p>}
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg font-semibold text-white">Bonus Questions</h2>
+          <button
+            onClick={() => setShowAddQ((v) => !v)}
+            className="text-sm bg-amber-700 hover:bg-amber-600 text-white px-3 py-1.5 rounded-lg transition-colors"
+          >
+            {showAddQ ? "Cancel" : "+ Add question"}
+          </button>
+        </div>
 
-        {/* Status of each question */}
-        <div className="mt-4 flex flex-col gap-2">
-          {questions.map((q) => (
-            <div key={q.id} className="flex items-start justify-between gap-3 py-2 border-b border-gray-800 last:border-0">
-              <p className="text-sm text-gray-300">{q.question}</p>
-              {q.resolved_at ? (
-                <span className="shrink-0 text-xs text-emerald-400 font-medium">{q.correct_answer}</span>
+        {/* Add new question form */}
+        {showAddQ && (
+          <form onSubmit={addQ} className="mb-6 p-4 bg-gray-800 rounded-lg flex flex-col gap-3">
+            <QField label="Question">
+              <input required value={newQ.question} onChange={(e) => setNewQ((q) => ({ ...q, question: e.target.value }))}
+                placeholder="e.g. Who will win the tournament?" className={inputCls} />
+            </QField>
+            <div className="grid grid-cols-2 gap-3">
+              <QField label="Category">
+                <input required value={newQ.category} onChange={(e) => setNewQ((q) => ({ ...q, category: e.target.value }))}
+                  placeholder="e.g. Tournament" className={inputCls} />
+              </QField>
+              <QField label="Points">
+                <input required type="text" inputMode="numeric" value={newQ.max_points}
+                  onChange={(e) => setNewQ((q) => ({ ...q, max_points: e.target.value.replace(/\D/g, "") }))}
+                  className={inputCls} />
+              </QField>
+            </div>
+            <QField label="Answer type">
+              <AnswerTypeSelect value={newQ.answer_type} onChange={(v) => setNewQ((q) => ({ ...q, answer_type: v }))} />
+            </QField>
+            {newQ.answer_type === "select" && (
+              <QField label="Options (comma-separated)">
+                <input value={newQ.optionsText} onChange={(e) => setNewQ((q) => ({ ...q, optionsText: e.target.value }))}
+                  placeholder="e.g. Argentina, Brazil, France" className={inputCls} />
+              </QField>
+            )}
+            <button type="submit" className="self-start bg-amber-700 hover:bg-amber-600 text-white text-sm px-4 py-2 rounded-lg transition-colors">
+              Add question
+            </button>
+          </form>
+        )}
+
+        {/* Existing questions */}
+        <div className="flex flex-col gap-3">
+          {bonusQs.map((q) => (
+            <div key={q.id} className="border border-gray-700 rounded-lg p-3">
+              {editingQ === q.id ? (
+                <div className="flex flex-col gap-2">
+                  <QField label="Question">
+                    <input value={editDraft.question ?? ""} onChange={(e) => setEditDraft((d) => ({ ...d, question: e.target.value }))} className={inputCls} />
+                  </QField>
+                  <div className="grid grid-cols-2 gap-2">
+                    <QField label="Category">
+                      <input value={editDraft.category ?? ""} onChange={(e) => setEditDraft((d) => ({ ...d, category: e.target.value }))} className={inputCls} />
+                    </QField>
+                    <QField label="Points">
+                      <input type="text" inputMode="numeric" value={String(editDraft.max_points ?? "")}
+                        onChange={(e) => setEditDraft((d) => ({ ...d, max_points: parseInt(e.target.value) || 0 }))} className={inputCls} />
+                    </QField>
+                  </div>
+                  <QField label="Answer type">
+                    <AnswerTypeSelect value={(editDraft.answer_type ?? "text") as BonusQuestion["answer_type"]}
+                      onChange={(v) => setEditDraft((d) => ({ ...d, answer_type: v }))} />
+                  </QField>
+                  {(editDraft.answer_type === "select") && (
+                    <QField label="Options (comma-separated)">
+                      <input value={editDraft.optionsText ?? ""} onChange={(e) => setEditDraft((d) => ({ ...d, optionsText: e.target.value }))}
+                        placeholder="Option A, Option B, Option C" className={inputCls} />
+                    </QField>
+                  )}
+                  <div className="flex gap-2 mt-1">
+                    <button onClick={() => saveQ(q.id)} className="text-xs bg-emerald-700 hover:bg-emerald-600 text-white px-3 py-1.5 rounded-lg transition-colors">Save</button>
+                    <button onClick={() => setEditingQ(null)} className="text-xs bg-gray-700 hover:bg-gray-600 text-white px-3 py-1.5 rounded-lg transition-colors">Cancel</button>
+                    {qStatus[q.id] && <span className="text-xs text-gray-400 self-center">{qStatus[q.id]}</span>}
+                  </div>
+                </div>
               ) : (
-                <span className="shrink-0 text-xs text-gray-600">Pending</span>
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="text-[10px] text-amber-400 font-semibold uppercase">{q.category}</span>
+                      <span className="text-[10px] text-gray-500 bg-gray-800 px-1.5 py-0.5 rounded">{q.answer_type}</span>
+                      <span className="text-[10px] text-gray-500">{q.max_points} pts</span>
+                      {q.resolved_at && <span className="text-[10px] text-emerald-400">✓ {q.correct_answer}</span>}
+                    </div>
+                    <p className="text-sm text-white mt-0.5">{q.question}</p>
+                    {q.options && <p className="text-[10px] text-gray-500 mt-0.5">{q.options.join(" · ")}</p>}
+                  </div>
+                  <div className="flex gap-1 shrink-0">
+                    <button onClick={() => startEditQ(q)} className="text-xs text-gray-400 hover:text-white px-2 py-1 rounded hover:bg-gray-700 transition-colors">Edit</button>
+                    <button onClick={() => deleteQ(q.id, q.question.slice(0, 40))} className="text-xs text-gray-600 hover:text-red-400 px-2 py-1 rounded hover:bg-gray-700 transition-colors">Delete</button>
+                  </div>
+                </div>
+              )}
+
+              {/* Resolve row (only for unresolved) */}
+              {!q.resolved_at && (
+                <div className="mt-2 pt-2 border-t border-gray-700/50 flex gap-2 items-center">
+                  {q.answer_type === "yesno" ? (
+                    <div className="relative flex-1 max-w-[160px]">
+                      <select value={bonusAnswers[q.id] ?? ""} onChange={(e) => setBonusAnswers((a) => ({ ...a, [q.id]: e.target.value }))} className={selectCls}>
+                        <option value="">Resolve…</option>
+                        <option value="Yes">Yes</option>
+                        <option value="No">No</option>
+                      </select>
+                      <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 text-xs">▼</span>
+                    </div>
+                  ) : q.answer_type === "select" && q.options?.length ? (
+                    <div className="relative flex-1 max-w-[220px]">
+                      <select value={bonusAnswers[q.id] ?? ""} onChange={(e) => setBonusAnswers((a) => ({ ...a, [q.id]: e.target.value }))} className={selectCls}>
+                        <option value="">Resolve…</option>
+                        {q.options.map((o) => <option key={o} value={o}>{o}</option>)}
+                      </select>
+                      <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 text-xs">▼</span>
+                    </div>
+                  ) : (
+                    <input value={bonusAnswers[q.id] ?? ""} onChange={(e) => setBonusAnswers((a) => ({ ...a, [q.id]: e.target.value }))}
+                      placeholder="Correct answer…" className="flex-1 max-w-[220px] bg-gray-800 border border-gray-700 rounded-lg px-3 py-1.5 text-white text-xs focus:outline-none focus:border-amber-500" />
+                  )}
+                  <button onClick={() => resolveBonus(q.id)} className="text-xs bg-amber-700 hover:bg-amber-600 text-white px-3 py-1.5 rounded-lg transition-colors shrink-0">
+                    Resolve
+                  </button>
+                  {bonusStatus[q.id] && <span className="text-xs text-gray-400">{bonusStatus[q.id]}</span>}
+                </div>
               )}
             </div>
           ))}
         </div>
 
-        {/* Manual fallback for questions that can't be auto-resolved */}
-        {questions.some((q) => !q.resolved_at && q.question.toLowerCase().includes("red card")) && (
-          <div className="mt-4 pt-4 border-t border-gray-800">
-            <p className="text-xs text-gray-500 mb-3">Manual resolve (not available from API):</p>
-            {questions.filter((q) => !q.resolved_at && q.question.toLowerCase().includes("red card")).map((q) => (
-              <div key={q.id}>
-                <p className="text-sm text-white mb-2">{q.question}</p>
-                <div className="flex gap-2 items-center">
-                  <div className="relative flex-1">
-                    <select
-                      value={bonusAnswers[q.id] ?? ""}
-                      onChange={(e) => setBonusAnswers((a) => ({ ...a, [q.id]: e.target.value }))}
-                      className={selectCls}
-                    >
-                      <option value="">Select…</option>
-                      <option value="Yes">Yes</option>
-                      <option value="No">No</option>
-                    </select>
-                    <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 text-xs">▼</span>
-                  </div>
-                  <button
-                    onClick={() => resolveBonus(q.id)}
-                    className="bg-amber-700 hover:bg-amber-600 text-white text-xs px-3 py-1.5 rounded-lg transition-colors shrink-0"
-                  >
-                    Resolve
-                  </button>
-                </div>
-                {bonusStatus[q.id] && <p className="text-xs text-gray-400 mt-1">{bonusStatus[q.id]}</p>}
-              </div>
-            ))}
-          </div>
-        )}
+        {/* Auto-resolve */}
+        <div className="mt-5 pt-5 border-t border-gray-800">
+          <p className="text-xs text-gray-500 mb-2">Auto-resolve from football-data.org (tournament, goals, top scorer):</p>
+          <button onClick={autoResolve} disabled={isPending}
+            className="bg-gray-700 hover:bg-gray-600 disabled:opacity-40 text-white text-sm px-4 py-2 rounded-lg transition-colors">
+            {isPending ? "Resolving…" : "Auto-resolve All"}
+          </button>
+          {autoResolveStatus && <p className="text-sm text-gray-400 mt-2">{autoResolveStatus}</p>}
+        </div>
       </div>
 
       {/* Manual sync */}
@@ -446,6 +589,38 @@ export default function AdminPanel({ players, questions, prizeConfig }: Props) {
           {isPending ? "Syncing…" : "Sync scores now"}
         </button>
       </div>
+    </div>
+  );
+}
+
+const inputCls = "w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-1.5 text-white text-sm focus:outline-none focus:border-amber-500";
+
+function QField({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div>
+      <div className="text-[10px] text-gray-400 mb-1 uppercase tracking-wide">{label}</div>
+      {children}
+    </div>
+  );
+}
+
+const ANSWER_TYPES: { value: BonusQuestion["answer_type"]; label: string }[] = [
+  { value: "text",   label: "Free text" },
+  { value: "number", label: "Number" },
+  { value: "team",   label: "Team (all WC teams)" },
+  { value: "player", label: "Player search" },
+  { value: "yesno",  label: "Yes / No" },
+  { value: "select", label: "Custom dropdown" },
+];
+
+function AnswerTypeSelect({ value, onChange }: { value: BonusQuestion["answer_type"]; onChange: (v: BonusQuestion["answer_type"]) => void }) {
+  return (
+    <div className="relative">
+      <select value={value} onChange={(e) => onChange(e.target.value as BonusQuestion["answer_type"])}
+        className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-1.5 text-white text-sm focus:outline-none focus:border-amber-500 appearance-none cursor-pointer">
+        {ANSWER_TYPES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
+      </select>
+      <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 text-xs">▼</span>
     </div>
   );
 }

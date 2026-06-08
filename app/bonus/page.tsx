@@ -49,7 +49,7 @@ export default async function BonusPage({
     const { data } = await supabase
       .from("bonus_answers")
       .select("user_id, question_id, answer, points_earned, profiles(name, username)");
-    allAnswers = (data ?? []) as typeof allAnswers;
+    allAnswers = (data ?? []) as unknown as typeof allAnswers;
 
     // Collect unique players
     const seen = new Set<string>();
