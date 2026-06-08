@@ -37,8 +37,9 @@ export default function JoinForm() {
     <div className="min-h-[80vh] flex items-center justify-center px-4">
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
-          <div className="text-4xl mb-2">⚽</div>
-          <h1 className="text-2xl font-bold text-white">Welcome!</h1>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/world-cup-trophy.png" alt="" className="w-20 h-20 object-contain mx-auto mb-3" />
+          <h1 className="text-2xl font-bold text-white">FIFA World Cup 2026</h1>
           <p className="text-gray-400 text-sm mt-1">Set your username and password to join the pool.</p>
         </div>
 
