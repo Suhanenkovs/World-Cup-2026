@@ -22,21 +22,22 @@ export default function Nav() {
 
   useEffect(() => {
     const supabase = createClient();
+
+    async function loadUser(userId: string | undefined) {
+      if (!userId) { setIsAdmin(false); return; }
+      const { data: profile } = await supabase
+        .from("profiles").select("is_admin").eq("id", userId).single();
+      setIsAdmin(profile?.is_admin ?? false);
+    }
+
     supabase.auth.getUser().then(({ data }) => {
       setUser(data.user ?? null);
-      if (data.user) {
-        supabase
-          .from("profiles")
-          .select("is_admin")
-          .eq("id", data.user.id)
-          .single()
-          .then(({ data: profile }) => {
-            setIsAdmin(profile?.is_admin ?? false);
-          });
-      }
+      loadUser(data.user?.id);
     });
+
     const { data: listener } = supabase.auth.onAuthStateChange((_e, session) => {
       setUser(session?.user ?? null);
+      loadUser(session?.user?.id);
     });
     return () => listener.subscription.unsubscribe();
   }, []);
