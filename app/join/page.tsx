@@ -12,23 +12,25 @@ export default function JoinPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [sessionReady, setSessionReady] = useState(false);
+  const [timedOut, setTimedOut] = useState(false);
 
   useEffect(() => {
     const supabase = createClient();
 
-    // Listen for auth events FIRST — the browser client auto-exchanges the code
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if ((event === "SIGNED_IN" || event === "PASSWORD_RECOVERY") && session) {
-        setSessionReady(true);
-      }
-    });
-
-    // Also check if session already exists (in case exchange happened before listener was ready)
     supabase.auth.getSession().then(({ data }) => {
       if (data.session) setSessionReady(true);
     });
 
-    return () => subscription.unsubscribe();
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session) setSessionReady(true);
+    });
+
+    const timer = setTimeout(() => setTimedOut(true), 8000);
+
+    return () => {
+      subscription.unsubscribe();
+      clearTimeout(timer);
+    };
   }, []);
 
   async function handleSubmit(e: React.FormEvent) {
@@ -64,8 +66,18 @@ export default function JoinPage() {
 
   if (!sessionReady) {
     return (
-      <div className="min-h-[80vh] flex items-center justify-center">
-        <p className="text-gray-400">Verifying invite link…</p>
+      <div className="min-h-[80vh] flex items-center justify-center px-4">
+        <div className="text-center space-y-3">
+          {timedOut ? (
+            <>
+              <p className="text-red-400 font-medium">Invite link verification failed.</p>
+              <p className="text-gray-400 text-sm">The link may have expired or already been used. Ask an admin to send a new invite.</p>
+              <a href="/login" className="text-emerald-400 text-sm underline">Go to login</a>
+            </>
+          ) : (
+            <p className="text-gray-400">Verifying invite link…</p>
+          )}
+        </div>
       </div>
     );
   }
