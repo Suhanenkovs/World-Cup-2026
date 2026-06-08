@@ -7,12 +7,12 @@ import { useEffect, useState } from "react";
 import type { User } from "@supabase/supabase-js";
 
 const NAV_LINKS = [
-  { href: "/groups",      label: "Groups" },
-  { href: "/bracket",     label: "Bracket" },
-  { href: "/matches",     label: "Matches" },
-  { href: "/predictions", label: "My Picks" },
-  { href: "/bonus",       label: "Bonus" },
-  { href: "/leaderboard", label: "Leaderboard" },
+  { href: "/groups",      label: "Groups",       mobileHide: false },
+  { href: "/bracket",     label: "Bracket",      mobileHide: true  },
+  { href: "/matches",     label: "Matches",      mobileHide: false },
+  { href: "/predictions", label: "My Picks",     mobileHide: false },
+  { href: "/bonus",       label: "Bonus",        mobileHide: false },
+  { href: "/leaderboard", label: "Leaderboard",  mobileHide: false },
 ];
 
 export default function Nav() {
@@ -119,7 +119,7 @@ export default function Nav() {
 
       {open && isAuth && (
         <div className="md:hidden border-t border-gray-800 px-4 py-2 flex flex-col gap-1">
-          {NAV_LINKS.map(({ href, label }) => (
+          {NAV_LINKS.filter((l) => !l.mobileHide).map(({ href, label }) => (
             <Link
               key={href}
               href={href}

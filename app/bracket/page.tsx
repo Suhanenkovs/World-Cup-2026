@@ -240,29 +240,11 @@ export default async function BracketPage() {
         </div>
       </div>
 
-      {/* ── Mobile: vertical list by round ────────────────────────────── */}
-      <div className="md:hidden space-y-6">
-        {[
-          { label: "Round of 32",       items: r32  },
-          { label: "Round of 16",       items: r16  },
-          { label: "Quarterfinals",     items: qf   },
-          { label: "Semifinals",        items: sf   },
-          { label: "Final",             items: finalMatch ? [finalMatch] : [undefined] },
-          { label: "3rd Place Play-off", items: third ? [third] : [undefined] },
-        ].map(({ label, items }) => (
-          <div key={label}>
-            <h2 className="text-xs font-semibold text-amber-400 uppercase tracking-wider mb-2">{label}</h2>
-            <div className="flex flex-col gap-2">
-              {(items as (MatchWithTeams | undefined)[]).map((m, i) => (
-                <MatchCard key={m?.id ?? i} match={m} highlight={label === "Final"} />
-              ))}
-            </div>
-          </div>
-        ))}
-        <div className="flex justify-center pt-2">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/world-cup-trophy.png" alt="Trophy" className="w-16 h-16 object-contain opacity-80" />
-        </div>
+      {/* ── Mobile: not available ─────────────────────────────────────── */}
+      <div className="md:hidden flex flex-col items-center gap-4 py-16 text-center">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/world-cup-trophy.png" alt="Trophy" className="w-16 h-16 object-contain opacity-60" />
+        <p className="text-gray-400 text-sm">Open on a larger screen to view the bracket.</p>
       </div>
     </div>
   );
