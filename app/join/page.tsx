@@ -16,26 +16,19 @@ export default function JoinPage() {
   useEffect(() => {
     const supabase = createClient();
 
-    async function exchange() {
-      // PKCE flow: invite link contains ?code=
-      const code = new URLSearchParams(window.location.search).get("code");
-      if (code) {
-        const { error } = await supabase.auth.exchangeCodeForSession(code);
-        if (!error) { setSessionReady(true); return; }
+    // Listen for auth events FIRST — the browser client auto-exchanges the code
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if ((event === "SIGNED_IN" || event === "PASSWORD_RECOVERY") && session) {
+        setSessionReady(true);
       }
-      // Legacy hash flow or already-established session
-      const { data } = await supabase.auth.getSession();
-      if (data.session) { setSessionReady(true); return; }
+    });
 
-      // Fall back to auth state change
-      supabase.auth.onAuthStateChange((event) => {
-        if (event === "SIGNED_IN" || event === "PASSWORD_RECOVERY") {
-          setSessionReady(true);
-        }
-      });
-    }
+    // Also check if session already exists (in case exchange happened before listener was ready)
+    supabase.auth.getSession().then(({ data }) => {
+      if (data.session) setSessionReady(true);
+    });
 
-    exchange();
+    return () => subscription.unsubscribe();
   }, []);
 
   async function handleSubmit(e: React.FormEvent) {
