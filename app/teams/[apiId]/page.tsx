@@ -21,7 +21,7 @@ interface FDTeamDetail {
   shortName: string;
   tla: string;
   crest: string | null;
-  founded: number | null;
+  type: string | null;
   venue: string | null;
   coach: { name: string | null; nationality: string | null } | null;
   squad: FDPlayer[];
@@ -82,11 +82,15 @@ export default async function TeamPage({
 
   if (!detail && !dbTeam) notFound();
 
-  const teamName = detail?.name ?? dbTeam?.name ?? "Team";
+  // Guard: if fd.org returned a club instead of a national team, ignore the API data
+  const isNational = !detail?.type || detail.type === "NATIONAL";
+  const safeDetail = isNational ? detail : null;
+
+  const teamName = safeDetail?.name ?? dbTeam?.name ?? "Team";
   const flagSrc  = dbTeam?.flag_url ?? getFlagUrl(teamName);
 
   // Group squad by position
-  const squad = detail?.squad ?? [];
+  const squad = safeDetail?.squad ?? [];
   const grouped = POSITION_ORDER
     .map((pos) => ({ pos, label: POSITION_LABELS[pos], players: squad.filter((p) => p.position === pos) }))
     .filter((g) => g.players.length > 0);
@@ -110,21 +114,20 @@ export default async function TeamPage({
         <div>
           <h1 className="text-3xl font-bold text-white">{teamName}</h1>
           <div className="flex items-center gap-3 mt-1 text-sm text-gray-400">
-            {detail?.tla && <span className="font-mono text-gray-500">{detail.tla}</span>}
+            {safeDetail?.tla && <span className="font-mono text-gray-500">{safeDetail.tla}</span>}
             {dbTeam?.group_letter && <span>Group {dbTeam.group_letter}</span>}
-            {detail?.founded && <span>Est. {detail.founded}</span>}
-            {detail?.venue && <span className="hidden sm:inline">{detail.venue}</span>}
+            {safeDetail?.venue && <span className="hidden sm:inline">{safeDetail.venue}</span>}
           </div>
         </div>
       </div>
 
       {/* Coach */}
-      {detail?.coach?.name && (
+      {safeDetail?.coach?.name && (
         <div className="bg-gray-900/75 backdrop-blur-sm border border-white/10 rounded-xl px-4 py-3 mb-6 flex items-center gap-3 flex-wrap">
           <span className="text-xs text-gray-500 uppercase tracking-wider font-semibold">Head Coach</span>
-          <span className="text-white font-semibold">{detail.coach.name}</span>
-          {detail.coach.nationality && (
-            <span className="text-gray-400 text-sm">{detail.coach.nationality}</span>
+          <span className="text-white font-semibold">{safeDetail.coach.name}</span>
+          {safeDetail.coach.nationality && (
+            <span className="text-gray-400 text-sm">{safeDetail.coach.nationality}</span>
           )}
         </div>
       )}
@@ -152,7 +155,7 @@ export default async function TeamPage({
           ))}
         </div>
       ) : (
-        <p className="text-gray-500 text-sm">{detail ? "Squad not yet announced." : "Could not load team data."}</p>
+        <p className="text-gray-500 text-sm">{safeDetail ? "Squad not yet announced." : "Squad not available."}</p>
       )}
 
     </div>
