@@ -83,8 +83,11 @@ export async function POST(request: NextRequest) {
     teamGoalMap[m.homeTeam.name] = (teamGoalMap[m.homeTeam.name] ?? 0) + (m.score.fullTime.home ?? 0);
     teamGoalMap[m.awayTeam.name] = (teamGoalMap[m.awayTeam.name] ?? 0) + (m.score.fullTime.away ?? 0);
   }
-  const mostGoalsTeam = Object.entries(teamGoalMap)
-    .sort(([, a], [, b]) => b - a)[0]?.[0] ?? null;
+  const sortedTeamGoals = Object.entries(teamGoalMap).sort(([, a], [, b]) => b - a);
+  const topGoalCount = sortedTeamGoals[0]?.[1] ?? null;
+  const mostGoalsTeams = topGoalCount !== null
+    ? sortedTeamGoals.filter(([, g]) => g === topGoalCount).map(([t]) => t)
+    : [];
 
   // Host nation that went furthest
   const teamBestRank: Record<string, number> = {};
@@ -105,15 +108,15 @@ export async function POST(request: NextRequest) {
     if ((q.includes("who will win") && q.includes("tournament")) && winner)
       return { answer: winner };
     if (q.includes("reach the final") && finalists.length === 2)
-      return { answer: finalists[0], multi: finalists };
+      return { answer: finalists.join("|"), multi: finalists };
     if (q.includes("golden boot") || q.includes("top scorer"))
       return topScorerName ? { answer: topScorerName } : null;
     if (q.includes("how many goals will the top scorer") && topScorerGoals !== null)
       return { answer: String(topScorerGoals) };
     if (q.includes("total number of goals") && totalGoals > 0)
       return { answer: String(totalGoals) };
-    if (q.includes("score the most goals in the group") && mostGoalsTeam)
-      return { answer: mostGoalsTeam };
+    if (q.includes("score the most goals in the group") && mostGoalsTeams.length > 0)
+      return { answer: mostGoalsTeams.join("|"), multi: mostGoalsTeams };
     if (q.includes("host nation") && hostNationFurthest)
       return { answer: hostNationFurthest };
     return null; // cannot auto-resolve (e.g. red card in Final)

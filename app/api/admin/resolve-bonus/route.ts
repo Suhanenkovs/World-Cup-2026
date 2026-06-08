@@ -37,10 +37,10 @@ export async function POST(request: NextRequest) {
     .select("id, answer")
     .eq("question_id", questionId);
 
-  const normalised = correctAnswer.trim().toLowerCase();
+  const accepted = correctAnswer.split("|").map((s: string) => s.trim().toLowerCase());
 
   for (const a of answers ?? []) {
-    const pts = a.answer.trim().toLowerCase() === normalised ? q!.max_points : 0;
+    const pts = accepted.includes(a.answer.trim().toLowerCase()) ? q!.max_points : 0;
     await service.from("bonus_answers").update({ points_earned: pts }).eq("id", a.id);
   }
 
