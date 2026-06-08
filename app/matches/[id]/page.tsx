@@ -26,7 +26,7 @@ export default async function MatchDetailPage({
 
   const { data: predictions } = await supabase
     .from("predictions")
-    .select("*, user:user_id(username)")
+    .select("*, user:user_id(username, name)")
     .eq("match_id", id)
     .order("points_earned", { ascending: false, nullsFirst: false });
 
@@ -100,13 +100,13 @@ export default async function MatchDetailPage({
       ) : (
         <div className="flex flex-col gap-2">
           {predictions.map((p) => {
-            const user = p.user as { username: string } | null;
+            const user = p.user as { username: string; name?: string | null } | null;
             return (
               <div
                 key={p.id}
                 className="bg-gray-900 border border-gray-800 rounded-xl px-4 py-3 flex items-center justify-between"
               >
-                <span className="font-medium text-white">{user?.username ?? "—"}</span>
+                <span className="font-medium text-white">{user?.name || user?.username || "—"}</span>
                 <div className="flex items-center gap-4">
                   <span className="font-mono text-gray-300">
                     {p.pred_home} – {p.pred_away}

@@ -68,7 +68,7 @@ export default async function LeaderboardPage() {
                   </td>
                   <td className="px-4 py-3">
                     <span className={`font-medium ${isMe ? "text-emerald-400" : "text-white"}`}>
-                      {row.username}
+                      {row.name || row.username}
                       {isMe && <span className="text-xs text-gray-500 ml-1">(you)</span>}
                     </span>
                     {!row.paid && (

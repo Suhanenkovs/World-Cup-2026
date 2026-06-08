@@ -35,6 +35,10 @@ export default function AdminPanel({ players, questions, prizeConfig }: Props) {
   const [inviteStatus, setInviteStatus] = useState("");
   const [payStatus, setPayStatus] = useState<Record<string, string>>({});
   const [adminStatus, setAdminStatus] = useState<Record<string, string>>({});
+  const [names, setNames] = useState<Record<string, string>>(
+    Object.fromEntries(players.map((p) => [p.id, (p as any).name ?? ""]))
+  );
+  const [nameStatus, setNameStatus] = useState<Record<string, string>>({});
   const [bonusAnswers, setBonusAnswers] = useState<Record<string, string>>({});
   const [bonusStatus, setBonusStatus] = useState<Record<string, string>>({});
   const [autoResolveStatus, setAutoResolveStatus] = useState("");
@@ -93,6 +97,20 @@ export default function AdminPanel({ players, questions, prizeConfig }: Props) {
     } else {
       setInviteStatus(`Error: ${json.error}`);
     }
+  }
+
+  async function saveName(userId: string) {
+    setNameStatus((s) => ({ ...s, [userId]: "Saving…" }));
+    const res = await fetch("/api/admin/set-name", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ userId, name: names[userId] }),
+    });
+    const json = await res.json();
+    setNameStatus((s) => ({
+      ...s,
+      [userId]: json.success ? "Saved ✓" : `Error: ${json.error}`,
+    }));
   }
 
   async function toggleAdmin(userId: string, currentIsAdmin: boolean) {
@@ -261,32 +279,56 @@ export default function AdminPanel({ players, questions, prizeConfig }: Props) {
         <h2 className="text-lg font-semibold text-white mb-3">Players</h2>
         <div className="flex flex-col gap-2">
           {players.map((p) => (
-            <div key={p.id} className="flex items-center justify-between gap-3 py-2 border-b border-gray-800 last:border-0">
-              <span className="font-medium text-white">{p.username}</span>
-              <div className="flex items-center gap-2">
-                {(payStatus[p.id] || adminStatus[p.id]) && (
-                  <span className="text-xs text-gray-400">{adminStatus[p.id] || payStatus[p.id]}</span>
-                )}
+            <div key={p.id} className="flex flex-col gap-2 py-3 border-b border-gray-800 last:border-0">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <span className="font-medium text-white">{p.username}</span>
+                  {(p as any).name && (
+                    <span className="ml-2 text-sm text-gray-400">{(p as any).name}</span>
+                  )}
+                </div>
+                <div className="flex items-center gap-2 shrink-0">
+                  {(payStatus[p.id] || adminStatus[p.id]) && (
+                    <span className="text-xs text-gray-400">{adminStatus[p.id] || payStatus[p.id]}</span>
+                  )}
+                  <button
+                    onClick={() => toggleAdmin(p.id, p.is_admin)}
+                    className={`text-xs px-3 py-1.5 rounded-lg font-medium transition-colors ${
+                      p.is_admin
+                        ? "bg-amber-900/40 text-amber-400 hover:bg-red-900/40 hover:text-red-400"
+                        : "bg-gray-800 text-gray-500 hover:bg-amber-900/40 hover:text-amber-400"
+                    }`}
+                  >
+                    {p.is_admin ? "Admin ✓" : "Make admin"}
+                  </button>
+                  <button
+                    onClick={() => togglePaid(p.id, p.paid)}
+                    className={`text-xs px-3 py-1.5 rounded-lg font-medium transition-colors ${
+                      p.paid
+                        ? "bg-emerald-900/40 text-emerald-400 hover:bg-red-900/40 hover:text-red-400"
+                        : "bg-gray-800 text-gray-400 hover:bg-emerald-900/40 hover:text-emerald-400"
+                    }`}
+                  >
+                    {p.paid ? "Paid ✓" : "Mark paid"}
+                  </button>
+                </div>
+              </div>
+              <div className="flex gap-2 items-center">
+                <input
+                  type="text"
+                  placeholder="Real name…"
+                  value={names[p.id] ?? ""}
+                  onChange={(e) => setNames((n) => ({ ...n, [p.id]: e.target.value }))}
+                  onKeyDown={(e) => e.key === "Enter" && saveName(p.id)}
+                  className="flex-1 bg-gray-800 border border-gray-700 rounded-lg px-3 py-1.5 text-white text-sm focus:outline-none focus:border-emerald-500"
+                />
                 <button
-                  onClick={() => toggleAdmin(p.id, p.is_admin)}
-                  className={`text-xs px-3 py-1.5 rounded-lg font-medium transition-colors ${
-                    p.is_admin
-                      ? "bg-amber-900/40 text-amber-400 hover:bg-red-900/40 hover:text-red-400"
-                      : "bg-gray-800 text-gray-500 hover:bg-amber-900/40 hover:text-amber-400"
-                  }`}
+                  onClick={() => saveName(p.id)}
+                  className="text-xs bg-gray-700 hover:bg-gray-600 text-white px-3 py-1.5 rounded-lg transition-colors shrink-0"
                 >
-                  {p.is_admin ? "Admin ✓" : "Make admin"}
+                  Save name
                 </button>
-                <button
-                  onClick={() => togglePaid(p.id, p.paid)}
-                  className={`text-xs px-3 py-1.5 rounded-lg font-medium transition-colors ${
-                    p.paid
-                      ? "bg-emerald-900/40 text-emerald-400 hover:bg-red-900/40 hover:text-red-400"
-                      : "bg-gray-800 text-gray-400 hover:bg-emerald-900/40 hover:text-emerald-400"
-                  }`}
-                >
-                  {p.paid ? "Paid ✓" : "Mark paid"}
-                </button>
+                {nameStatus[p.id] && <span className="text-xs text-gray-400">{nameStatus[p.id]}</span>}
               </div>
             </div>
           ))}
