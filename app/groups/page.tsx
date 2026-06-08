@@ -165,7 +165,7 @@ export default async function GroupsPage() {
 
   // Sort groups A–L
   const groups = fdGroups.sort((a, b) => a.group.localeCompare(b.group));
-  const groupLetters = groups.map((g) => g.group.replace("GROUP_", ""));
+  const groupLetters = groups.map((g) => g.group.replace(/^GROUP[_ ]?/i, ""));
 
   // Fallback: if FD standings not available yet, show groups from DB only
   const dbOnlyLetters = [...matchesByGroup.keys()]
@@ -178,7 +178,7 @@ export default async function GroupsPage() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
         {groups.map((g) => {
-          const letter = g.group.replace("GROUP_", "");
+          const letter = g.group.replace(/^GROUP[_ ]?/i, "");
           return (
             <div key={g.group} className="bg-gray-900/75 backdrop-blur-sm border border-white/10 rounded-xl p-4">
               <h2 className="text-xs font-bold uppercase tracking-widest text-emerald-400 mb-3">
