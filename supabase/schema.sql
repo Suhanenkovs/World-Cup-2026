@@ -125,12 +125,21 @@ create policy "bonus_answers_update_own" on public.bonus_answers for update usin
 -- ── Auto-create profile on signup ────────────────────────
 create or replace function public.handle_new_user()
 returns trigger as $$
+declare
+  base_username text;
+  final_username text;
+  counter int := 0;
 begin
+  base_username := coalesce(new.raw_user_meta_data->>'username', split_part(new.email, '@', 1));
+  final_username := base_username;
+
+  while exists (select 1 from public.profiles where username = final_username) loop
+    counter := counter + 1;
+    final_username := base_username || counter;
+  end loop;
+
   insert into public.profiles (id, username)
-  values (
-    new.id,
-    coalesce(new.raw_user_meta_data->>'username', split_part(new.email, '@', 1))
-  );
+  values (new.id, final_username);
   return new;
 end;
 $$ language plpgsql security definer;
