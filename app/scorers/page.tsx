@@ -1,0 +1,96 @@
+import { createClient } from "@/lib/supabase/server";
+import { redirect } from "next/navigation";
+import { getFlagUrl } from "@/lib/teamFlags";
+
+export const revalidate = 300;
+
+interface FDScorer {
+  player: { id: number; name: string; nationality: string | null };
+  team: { id: number; name: string; shortName: string; tla: string };
+  goals: number;
+  assists: number | null;
+  penalties: number | null;
+}
+
+async function fetchScorers(): Promise<FDScorer[]> {
+  try {
+    const res = await fetch("https://api.football-data.org/v4/competitions/WC/scorers?limit=100", {
+      headers: { "X-Auth-Token": process.env.FOOTBALL_DATA_API_KEY! },
+      next: { revalidate: 300 },
+    });
+    if (!res.ok) return [];
+    const json = await res.json();
+    return json.scorers ?? [];
+  } catch {
+    return [];
+  }
+}
+
+export default async function ScorersPage() {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
+
+  const scorers = await fetchScorers();
+
+  return (
+    <div className="max-w-2xl mx-auto px-4 py-8">
+      <h1 className="text-2xl font-bold text-white mb-6">Tournament Top Scorers</h1>
+
+      {scorers.length === 0 ? (
+        <p className="text-gray-500 text-sm py-8 text-center">
+          Scorer data available once the tournament begins.
+        </p>
+      ) : (
+        <div className="bg-gray-900/50 backdrop-blur-sm border border-white/10 rounded-xl overflow-hidden">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-white/5 text-[10px] text-gray-500 uppercase tracking-wider">
+                <th className="px-3 py-2.5 text-left w-8">#</th>
+                <th className="px-3 py-2.5 text-left">Player</th>
+                <th className="px-3 py-2.5 text-left hidden sm:table-cell">Team</th>
+                <th className="px-3 py-2.5 text-right w-14">Goals</th>
+                <th className="px-3 py-2.5 text-right w-12">Ast</th>
+                <th className="px-3 py-2.5 text-right w-12 hidden sm:table-cell">Pen</th>
+              </tr>
+            </thead>
+            <tbody>
+              {scorers.map((s, i) => {
+                const flagSrc = getFlagUrl(s.team.name) ?? getFlagUrl(s.team.shortName);
+                return (
+                  <tr key={s.player.id} className={`border-b border-white/5 last:border-0 ${i % 2 !== 0 ? "bg-white/[0.02]" : ""}`}>
+                    <td className="px-3 py-2.5 text-gray-500 font-mono text-xs">{i + 1}</td>
+                    <td className="px-3 py-2.5">
+                      <div className="text-white font-medium">{s.player.name}</div>
+                      <div className="flex items-center gap-1.5 mt-0.5 sm:hidden">
+                        {flagSrc
+                          // eslint-disable-next-line @next/next/no-img-element
+                          ? <img src={flagSrc} alt={s.team.name} className="w-4 h-3 object-cover rounded-sm border border-gray-700 shrink-0" />
+                          : null
+                        }
+                        <span className="text-xs text-gray-400">{s.team.shortName}</span>
+                      </div>
+                    </td>
+                    <td className="px-3 py-2.5 hidden sm:table-cell">
+                      <div className="flex items-center gap-1.5">
+                        {flagSrc
+                          // eslint-disable-next-line @next/next/no-img-element
+                          ? <img src={flagSrc} alt={s.team.name} className="w-5 h-3.5 object-cover rounded-sm border border-gray-700 shrink-0" />
+                          : null
+                        }
+                        <span className="text-gray-300 text-xs">{s.team.shortName}</span>
+                      </div>
+                    </td>
+                    <td className="px-3 py-2.5 text-right font-bold text-emerald-400">{s.goals}</td>
+                    <td className="px-3 py-2.5 text-right text-gray-300">{s.assists ?? 0}</td>
+                    <td className="px-3 py-2.5 text-right text-gray-500 hidden sm:table-cell">{s.penalties ?? 0}</td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  );
+}

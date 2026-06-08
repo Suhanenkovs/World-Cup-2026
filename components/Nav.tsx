@@ -7,8 +7,9 @@ import { useEffect, useState } from "react";
 import type { User } from "@supabase/supabase-js";
 
 const NAV_LINKS = [
-  { href: "/groups",      label: "Groups",       mobileHide: false },
+  { href: "/groups",      label: "Group Stage",  mobileHide: false },
   { href: "/bracket",     label: "Bracket",      mobileHide: true  },
+  { href: "/scorers",     label: "Top Scorers",  mobileHide: false },
   { href: "/matches",     label: "Matches",      mobileHide: false },
   { href: "/predictions", label: "My Picks",     mobileHide: false },
   { href: "/bonus",       label: "Bonus",        mobileHide: false },

@@ -121,7 +121,7 @@ function MatchRow({ match, pred, stage, userId, isPaid }: MatchRowProps) {
             value={home}
             onChange={handleChange(setHome)}
             disabled={isLocked}
-            placeholder="–"
+            placeholder=""
             className="w-10 text-center bg-gray-800 border border-gray-700 rounded-md py-1 text-white text-sm
               placeholder-gray-600 disabled:opacity-40 disabled:cursor-not-allowed
               focus:outline-none focus:border-emerald-500 [appearance:textfield]
@@ -138,7 +138,7 @@ function MatchRow({ match, pred, stage, userId, isPaid }: MatchRowProps) {
             value={away}
             onChange={handleChange(setAway)}
             disabled={isLocked}
-            placeholder="–"
+            placeholder=""
             className="w-10 text-center bg-gray-800 border border-gray-700 rounded-md py-1 text-white text-sm
               placeholder-gray-600 disabled:opacity-40 disabled:cursor-not-allowed
               focus:outline-none focus:border-emerald-500 [appearance:textfield]
