@@ -36,7 +36,7 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(new URL("/login", request.url));
   }
 
-  if (user && (path === "/login" || path === "/join")) {
+  if (user && path === "/login") {
     return NextResponse.redirect(new URL("/predictions", request.url));
   }
 

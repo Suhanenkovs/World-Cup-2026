@@ -1,10 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import JoinForm from "./JoinForm";
 
 export default function JoinPage() {
+  const router = useRouter();
   const [ready, setReady] = useState(false);
   const [timedOut, setTimedOut] = useState(false);
 
@@ -13,27 +15,46 @@ export default function JoinPage() {
     let cancelled = false;
 
     async function init() {
-      // Case 1: session already in cookies (PKCE callback flow)
-      const { data: { session: existing } } = await supabase.auth.getSession();
-      if (existing) { if (!cancelled) setReady(true); return; }
+      let session = null;
 
-      // Case 2: Supabase implicit flow — token is in the URL hash
-      const hash = typeof window !== "undefined" ? window.location.hash : "";
-      if (hash) {
-        const params = new URLSearchParams(hash.substring(1));
+      // Case 1: existing cookie-based session
+      const { data: { session: existing } } = await supabase.auth.getSession();
+      if (existing) {
+        session = existing;
+      }
+
+      // Case 2: Supabase implicit flow — token in URL hash
+      if (!session && typeof window !== "undefined" && window.location.hash) {
+        const params = new URLSearchParams(window.location.hash.substring(1));
         const accessToken = params.get("access_token");
         const refreshToken = params.get("refresh_token");
         if (accessToken && refreshToken) {
           const { data } = await supabase.auth.setSession({ access_token: accessToken, refresh_token: refreshToken });
-          if (data.session && !cancelled) { setReady(true); return; }
+          if (data.session) session = data.session;
         }
       }
+
+      if (!session || cancelled) return;
+
+      // If registration already complete (has username), skip form
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("username")
+        .eq("id", session.user.id)
+        .single();
+
+      if (profile?.username) {
+        router.replace("/predictions");
+        return;
+      }
+
+      if (!cancelled) setReady(true);
     }
 
     init();
     const timer = setTimeout(() => { if (!cancelled) setTimedOut(true); }, 8000);
     return () => { cancelled = true; clearTimeout(timer); };
-  }, []);
+  }, [router]);
 
   if (!ready) {
     return (
