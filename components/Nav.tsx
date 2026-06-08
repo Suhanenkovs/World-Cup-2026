@@ -8,10 +8,10 @@ import type { User } from "@supabase/supabase-js";
 
 const NAV_LINKS = [
   { href: "/groups",      label: "Groups" },
+  { href: "/bracket",     label: "Bracket" },
   { href: "/matches",     label: "Matches" },
   { href: "/predictions", label: "My Picks" },
   { href: "/bonus",       label: "Bonus" },
-  { href: "/bracket",     label: "Bracket" },
   { href: "/leaderboard", label: "Leaderboard" },
 ];
 

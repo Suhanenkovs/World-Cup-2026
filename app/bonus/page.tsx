@@ -21,7 +21,7 @@ export default async function BonusPage({
 
   const { data: questions } = await supabase
     .from("bonus_questions")
-    .select("*")
+    .select("id, question, category, max_points, correct_answer, resolved_at, created_at, answer_type, options, sort_order")
     .order("sort_order", { ascending: true })
     .order("created_at", { ascending: true });
 

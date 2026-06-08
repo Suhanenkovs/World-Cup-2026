@@ -54,13 +54,15 @@ export async function PATCH(req: NextRequest) {
   if (fields.options !== undefined) update.options = fields.options?.length ? fields.options : null;
   if (fields.sort_order !== undefined) update.sort_order = fields.sort_order;
 
-  const { error } = await createServiceClient()
+  const { data: updated, error } = await createServiceClient()
     .from("bonus_questions")
     .update(update)
-    .eq("id", id);
+    .eq("id", id)
+    .select("id, question, category, max_points, correct_answer, resolved_at, created_at, answer_type, options, sort_order")
+    .single();
 
   if (error) return Response.json({ error: error.message }, { status: 500 });
-  return Response.json({ success: true });
+  return Response.json({ success: true, question: updated });
 }
 
 // DELETE — delete question

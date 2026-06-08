@@ -5,88 +5,132 @@ import { getFlagUrl } from "@/lib/teamFlags";
 
 export const revalidate = 60;
 
+// ── Shared helpers ─────────────────────────────────────────────────────────
+
 function Flag({ team }: { team: Team | null | undefined }) {
   if (!team) return null;
   const src = team.flag_url ?? getFlagUrl(team.name);
   if (!src) return null;
   // eslint-disable-next-line @next/next/no-img-element
-  return <img src={src} alt={team.name} className="w-5 h-3.5 object-cover rounded-sm border border-gray-700 shrink-0" />;
+  return <img src={src} alt={team.name} className="w-4 h-3 object-cover rounded-sm border border-gray-700 shrink-0" />;
 }
 
 function TeamRow({ team, score }: { team: Team | null | undefined; score: number | null }) {
   return (
     <div className="flex items-center gap-1.5 min-w-0">
       <Flag team={team} />
-      <span className={`text-xs font-medium truncate ${team ? "text-white" : "text-gray-500"}`}>
+      <span className={`text-[10px] font-medium truncate leading-tight ${team ? "text-white" : "text-gray-600"}`}>
         {team?.short_name ?? team?.name ?? "TBD"}
       </span>
       {score !== null && (
-        <span className="ml-auto text-xs font-bold text-white shrink-0 pl-2">{score}</span>
+        <span className="ml-auto text-[10px] font-bold text-white shrink-0 pl-1">{score}</span>
       )}
     </div>
   );
 }
 
-function MatchSlot({ match, label }: { match: MatchWithTeams | undefined; label?: string }) {
+function MatchCard({ match, highlight }: { match: MatchWithTeams | undefined; highlight?: boolean }) {
   const hasScore = match && match.home_score !== null;
   return (
-    <div className={`rounded-lg border text-[11px] w-36 shrink-0 overflow-hidden
-      ${match ? "bg-gray-900 border-gray-700" : "bg-gray-900/40 border-gray-800"}`}>
-      {label && (
-        <div className="bg-gray-800 px-2 py-0.5 text-[10px] text-gray-400 font-medium">{label}</div>
-      )}
+    <div className={`w-28 rounded-md border text-[10px] shrink-0 overflow-hidden
+      ${match ? "bg-gray-900 border-gray-700" : "bg-gray-900/30 border-gray-800/50"}
+      ${highlight ? "ring-1 ring-amber-500/60" : ""}`}>
       {match ? (
-        <div className="px-2 py-1.5 flex flex-col gap-1">
+        <div className="px-2 py-1 flex flex-col gap-px">
           <TeamRow team={match.home_team} score={hasScore ? match.home_score : null} />
+          <div className="border-t border-gray-800" />
           <TeamRow team={match.away_team} score={hasScore ? match.away_score : null} />
         </div>
       ) : (
-        <div className="px-2 py-1.5 flex flex-col gap-1">
-          <div className="text-gray-600 text-[10px]">TBD</div>
-          <div className="text-gray-600 text-[10px]">TBD</div>
+        <div className="px-2 py-1 flex flex-col gap-px">
+          <span className="text-gray-700 text-[9px]">TBD</span>
+          <div className="border-t border-gray-800" />
+          <span className="text-gray-700 text-[9px]">TBD</span>
         </div>
       )}
     </div>
   );
 }
 
-// Bracket arm: vertical line + horizontal connector
-function Arm({ position }: { position: "top" | "bottom" }) {
+// ── Desktop bracket components ─────────────────────────────────────────────
+
+// A column of N matches, each given an equal flex-1 vertical slot so spacing doubles each round
+function RoundCol({ matches }: { matches: (MatchWithTeams | undefined)[] }) {
   return (
-    <div className="flex flex-col items-end w-4 shrink-0">
-      <div className={`border-gray-600 border-r-2 border-t-2 rounded-tr-sm w-full
-        ${position === "top" ? "h-1/2 self-end border-b-0" : "hidden"}`} />
-      <div className={`border-gray-600 border-r-2 border-b-2 rounded-br-sm w-full
-        ${position === "bottom" ? "h-1/2 self-start border-t-0" : "hidden"}`} />
+    <div className="flex flex-col shrink-0 w-28">
+      {matches.map((m, i) => (
+        <div key={i} className="flex-1 flex items-center">
+          <MatchCard match={m} />
+        </div>
+      ))}
     </div>
   );
 }
 
-// A pair of QF matches that feed into one SF match
-function QFPair({ top, bottom, sf }: {
-  top: MatchWithTeams | undefined;
-  bottom: MatchWithTeams | undefined;
-  sf: MatchWithTeams | undefined;
+// Bracket arms feeding left → right (left side of bracket)
+function LeftConn({ arms }: { arms: number }) {
+  return (
+    <div className="flex flex-col w-4 shrink-0">
+      {Array.from({ length: arms }).map((_, i) => (
+        <div key={i} className="flex-1 flex flex-col">
+          <div className="flex-1 border-r-2 border-b-2 border-gray-700 rounded-br-sm" />
+          <div className="flex-1 border-r-2 border-t-2 border-gray-700 rounded-tr-sm" />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// Bracket arms feeding right → left (right side of bracket)
+function RightConn({ arms }: { arms: number }) {
+  return (
+    <div className="flex flex-col w-4 shrink-0">
+      {Array.from({ length: arms }).map((_, i) => (
+        <div key={i} className="flex-1 flex flex-col">
+          <div className="flex-1 border-l-2 border-b-2 border-gray-700 rounded-bl-sm" />
+          <div className="flex-1 border-l-2 border-t-2 border-gray-700 rounded-tl-sm" />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// Horizontal line connecting SF to Final — sits at Y=50% via flex items-center
+function HorizLine() {
+  return (
+    <div className="self-stretch flex items-center w-6 shrink-0">
+      <div className="w-full border-t-2 border-gray-700" />
+    </div>
+  );
+}
+
+// Center column: trophy at top, Final at Y=50%, 3rd place below
+function CenterCol({ final: finalMatch, third }: {
+  final: MatchWithTeams | undefined;
+  third: MatchWithTeams | undefined;
 }) {
   return (
-    <div className="flex items-center gap-0">
-      {/* QF column */}
-      <div className="flex flex-col gap-6">
-        <MatchSlot match={top} />
-        <MatchSlot match={bottom} />
+    <div className="flex flex-col items-center shrink-0 w-36">
+      {/* Top half — pushes Final card to the vertical center */}
+      <div className="flex-1 flex flex-col items-center justify-end pb-3 gap-1">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/world-cup-trophy.png" alt="Trophy" className="w-10 h-10 object-contain opacity-90" />
+        <span className="text-[9px] text-amber-400 font-bold uppercase tracking-widest">Final</span>
       </div>
-
-      {/* bracket arm */}
-      <div className="flex flex-col self-stretch w-4 shrink-0">
-        <div className="flex-1 border-r-2 border-b-2 border-gray-600 rounded-br-sm" />
-        <div className="flex-1 border-r-2 border-t-2 border-gray-600 rounded-tr-sm" />
+      {/* Final card — centered at Y=50% of bracket height */}
+      <div className="shrink-0">
+        <MatchCard match={finalMatch} highlight />
       </div>
-
-      {/* SF match */}
-      <MatchSlot match={sf} />
+      {/* Bottom half */}
+      <div className="flex-1 flex flex-col items-center justify-start pt-3 gap-1">
+        <span className="text-[9px] text-gray-500 font-semibold uppercase">3rd Place</span>
+        <MatchCard match={third} />
+      </div>
     </div>
   );
 }
+
+// ── Page ───────────────────────────────────────────────────────────────────
 
 export default async function BracketPage() {
   const supabase = await createClient();
@@ -96,79 +140,121 @@ export default async function BracketPage() {
   const { data: matches } = await supabase
     .from("matches")
     .select("*, home_team:home_team_id(*), away_team:away_team_id(*)")
-    .in("stage", ["quarterfinal", "semifinal", "final", "third_place"])
+    .in("stage", ["round_of_32", "round_of_16", "quarterfinal", "semifinal", "final", "third_place"])
     .order("match_number", { ascending: true });
 
   const all = (matches ?? []) as MatchWithTeams[];
-  const qf = all.filter((m) => m.stage === "quarterfinal");
-  const sf = all.filter((m) => m.stage === "semifinal");
-  const final = all.find((m) => m.stage === "final");
-  const third = all.find((m) => m.stage === "third_place");
+  const r32  = all.filter((m) => m.stage === "round_of_32");
+  const r16  = all.filter((m) => m.stage === "round_of_16");
+  const qf   = all.filter((m) => m.stage === "quarterfinal");
+  const sf   = all.filter((m) => m.stage === "semifinal");
+  const finalMatch = all.find((m) => m.stage === "final");
+  const third      = all.find((m) => m.stage === "third_place");
+
+  function pad(arr: MatchWithTeams[], n: number): (MatchWithTeams | undefined)[] {
+    return [...arr, ...Array(Math.max(0, n - arr.length)).fill(undefined)];
+  }
+
+  const r32L = pad(r32.slice(0, 8), 8);
+  const r32R = pad(r32.slice(8),    8);
+  const r16L = pad(r16.slice(0, 4), 4);
+  const r16R = pad(r16.slice(4),    4);
+  const qfL  = pad(qf.slice(0, 2),  2);
+  const qfR  = pad(qf.slice(2),     2);
+  const sfL  = sf[0];
+  const sfR  = sf[1];
+
+  // Desktop label row widths must exactly match the bracket column widths below
+  const labelCols = [
+    { w: 112, label: "Round of 32"   },
+    { w: 16,  label: ""              },
+    { w: 112, label: "Round of 16"   },
+    { w: 16,  label: ""              },
+    { w: 112, label: "Quarterfinals" },
+    { w: 16,  label: ""              },
+    { w: 112, label: "Semifinals"    },
+    { w: 24,  label: ""              },
+    { w: 144, label: "Final"         },
+    { w: 24,  label: ""              },
+    { w: 112, label: "Semifinals"    },
+    { w: 16,  label: ""              },
+    { w: 112, label: "Quarterfinals" },
+    { w: 16,  label: ""              },
+    { w: 112, label: "Round of 16"   },
+    { w: 16,  label: ""              },
+    { w: 112, label: "Round of 32"   },
+  ];
+
+  const totalW = labelCols.reduce((s, c) => s + c.w, 0);
 
   return (
-    <div className="max-w-5xl mx-auto px-4 py-8">
-      <h1 className="text-2xl font-bold text-white mb-1">Knockout Bracket</h1>
-      <p className="text-gray-400 text-sm mb-8">Quarterfinals onwards — earlier rounds in the match schedule</p>
+    <div className="max-w-screen-2xl mx-auto px-4 py-8">
+      <h1 className="text-2xl font-bold text-white mb-6">Knockout Bracket</h1>
 
-      {/* Desktop bracket */}
-      <div className="hidden md:flex items-center justify-center gap-0">
+      {/* ── Desktop full bracket tree ──────────────────────────────────── */}
+      <div className="hidden md:block overflow-x-auto pb-6">
 
-        {/* Left: QF1+QF2 → SF1 */}
-        <QFPair top={qf[0]} bottom={qf[1]} sf={sf[0]} />
-
-        {/* Left SF → Final arm */}
-        <div className="flex flex-col self-stretch w-4 shrink-0">
-          <div className="flex-1 border-r-2 border-b-2 border-gray-600 rounded-br-sm" />
-          <div className="flex-1 border-r-2 border-t-2 border-gray-600 rounded-tr-sm" />
+        {/* Round labels */}
+        <div className="flex mb-2" style={{ minWidth: totalW }}>
+          {labelCols.map((col, i) => (
+            <div
+              key={i}
+              style={{ width: col.w, flexShrink: 0 }}
+              className="text-center text-[9px] text-amber-400/60 font-semibold uppercase tracking-wider truncate"
+            >
+              {col.label}
+            </div>
+          ))}
         </div>
 
-        {/* Center: Final + trophy + 3rd place */}
-        <div className="flex flex-col items-center gap-4 px-2">
-          <div className="text-[10px] text-amber-400 font-semibold uppercase tracking-wider">Final</div>
-          <MatchSlot match={final} />
-          <div className="flex flex-col items-center">
-            <img src="/world-cup-trophy.png" alt="Trophy" className="w-14 h-14 object-contain opacity-90" />
-            <span className="text-amber-400 text-[10px] font-semibold mt-1">WORLD CUP</span>
-          </div>
-          <div className="text-[10px] text-gray-500 font-semibold uppercase tracking-wider">3rd Place</div>
-          <MatchSlot match={third} />
-        </div>
+        {/* Bracket tree — all columns share the same height via items-stretch */}
+        <div className="flex items-stretch" style={{ minWidth: totalW, height: 640 }}>
 
-        {/* Right SF → Final arm */}
-        <div className="flex flex-col self-stretch w-4 shrink-0">
-          <div className="flex-1 border-l-2 border-b-2 border-gray-600 rounded-bl-sm" />
-          <div className="flex-1 border-l-2 border-t-2 border-gray-600 rounded-tl-sm" />
-        </div>
+          {/* Left bracket: R32 → R16 → QF → SF */}
+          <RoundCol matches={r32L} />
+          <LeftConn arms={4} />
+          <RoundCol matches={r16L} />
+          <LeftConn arms={2} />
+          <RoundCol matches={qfL} />
+          <LeftConn arms={1} />
+          <RoundCol matches={[sfL]} />
 
-        {/* Right: QF3+QF4 → SF2 (mirrored) */}
-        <div className="flex items-center gap-0">
-          <MatchSlot match={sf[1]} />
+          {/* SF left → Final */}
+          <HorizLine />
 
-          <div className="flex flex-col self-stretch w-4 shrink-0">
-            <div className="flex-1 border-l-2 border-b-2 border-gray-600 rounded-bl-sm" />
-            <div className="flex-1 border-l-2 border-t-2 border-gray-600 rounded-tl-sm" />
-          </div>
+          {/* Center */}
+          <CenterCol final={finalMatch} third={third} />
 
-          <div className="flex flex-col gap-6">
-            <MatchSlot match={qf[2]} />
-            <MatchSlot match={qf[3]} />
-          </div>
+          {/* Final → SF right */}
+          <HorizLine />
+
+          {/* Right bracket: SF → QF → R16 → R32 */}
+          <RoundCol matches={[sfR]} />
+          <RightConn arms={1} />
+          <RoundCol matches={qfR} />
+          <RightConn arms={2} />
+          <RoundCol matches={r16R} />
+          <RightConn arms={4} />
+          <RoundCol matches={r32R} />
+
         </div>
       </div>
 
-      {/* Mobile: vertical list by round */}
+      {/* ── Mobile: vertical list by round ────────────────────────────── */}
       <div className="md:hidden space-y-6">
         {[
-          { label: "Quarterfinals", matches: qf },
-          { label: "Semifinals", matches: sf },
-          { label: "Final", matches: final ? [final] : [] },
-          { label: "3rd Place Play-off", matches: third ? [third] : [] },
-        ].map(({ label, matches: round }) => (
+          { label: "Round of 32",       items: r32  },
+          { label: "Round of 16",       items: r16  },
+          { label: "Quarterfinals",     items: qf   },
+          { label: "Semifinals",        items: sf   },
+          { label: "Final",             items: finalMatch ? [finalMatch] : [undefined] },
+          { label: "3rd Place Play-off", items: third ? [third] : [undefined] },
+        ].map(({ label, items }) => (
           <div key={label}>
             <h2 className="text-xs font-semibold text-amber-400 uppercase tracking-wider mb-2">{label}</h2>
             <div className="flex flex-col gap-2">
-              {(round as MatchWithTeams[]).map((m) => (
-                <MatchSlot key={m.id} match={m} />
+              {(items as (MatchWithTeams | undefined)[]).map((m, i) => (
+                <MatchCard key={m?.id ?? i} match={m} highlight={label === "Final"} />
               ))}
             </div>
           </div>

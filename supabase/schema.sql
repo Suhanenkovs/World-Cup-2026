@@ -140,7 +140,9 @@ create trigger on_auth_user_created
   for each row execute procedure public.handle_new_user();
 
 -- ── Leaderboard view ──────────────────────────────────────
-create or replace view public.leaderboard as
+create or replace view public.leaderboard
+with (security_invoker = true)
+as
 select
   p.id,
   p.username,

@@ -20,7 +20,7 @@ export default async function AdminPage() {
   const service = createServiceClient();
   const [{ data: players }, { data: questions }, { data: config }, { data: { users } }] = await Promise.all([
     supabase.from("profiles").select("*").order("joined_at", { ascending: true }),
-    supabase.from("bonus_questions").select("*").order("created_at", { ascending: true }),
+    supabase.from("bonus_questions").select("id, question, category, max_points, correct_answer, resolved_at, created_at, answer_type, options, sort_order").order("sort_order", { ascending: true }).order("created_at", { ascending: true }),
     supabase.from("prize_config").select("*").eq("id", 1).single(),
     service.auth.admin.listUsers({ perPage: 1000 }),
   ]);

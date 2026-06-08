@@ -63,7 +63,10 @@ function NumberInput({ value, onChange, disabled }: {
       pattern="[0-9]*"
       maxLength={4}
       value={value}
-      onChange={(e) => onChange(e.target.value.replace(/\D/g, ""))}
+      onChange={(e) => {
+        const digits = e.target.value.replace(/\D/g, "");
+        onChange(digits === "" ? "" : String(parseInt(digits, 10)));
+      }}
       disabled={disabled}
       placeholder="Enter a number…"
       autoComplete="off"

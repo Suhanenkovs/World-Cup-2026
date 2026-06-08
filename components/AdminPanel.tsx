@@ -212,9 +212,7 @@ export default function AdminPanel({ players, questions, prizeConfig }: Props) {
     });
     const json = await res.json();
     if (json.success) {
-      setBonusQs((qs) => qs.map((q) => q.id === id
-        ? { ...q, ...editDraft, options: options.length ? options : null } as BonusQuestion
-        : q));
+      setBonusQs((qs) => qs.map((q) => q.id === id ? json.question as BonusQuestion : q));
       setEditingQ(null);
       setQStatus((s) => ({ ...s, [id]: "Saved ✓" }));
     } else {
@@ -486,13 +484,17 @@ export default function AdminPanel({ players, questions, prizeConfig }: Props) {
                   <QField label="Question">
                     <input value={editDraft.question ?? ""} onChange={(e) => setEditDraft((d) => ({ ...d, question: e.target.value }))} className={inputCls} />
                   </QField>
-                  <div className="grid grid-cols-2 gap-2">
+                  <div className="grid grid-cols-3 gap-2">
                     <QField label="Category">
                       <input value={editDraft.category ?? ""} onChange={(e) => setEditDraft((d) => ({ ...d, category: e.target.value }))} className={inputCls} />
                     </QField>
                     <QField label="Points">
                       <input type="text" inputMode="numeric" value={String(editDraft.max_points ?? "")}
                         onChange={(e) => setEditDraft((d) => ({ ...d, max_points: parseInt(e.target.value) || 0 }))} className={inputCls} />
+                    </QField>
+                    <QField label="Order">
+                      <input type="text" inputMode="numeric" value={String(editDraft.sort_order ?? 0)}
+                        onChange={(e) => setEditDraft((d) => ({ ...d, sort_order: parseInt(e.target.value) || 0 }))} className={inputCls} />
                     </QField>
                   </div>
                   <QField label="Answer type">
@@ -515,6 +517,7 @@ export default function AdminPanel({ players, questions, prizeConfig }: Props) {
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
+                      <span className="text-[10px] text-gray-600 font-mono">#{q.sort_order}</span>
                       <span className="text-[10px] text-amber-400 font-semibold uppercase">{q.category}</span>
                       <span className="text-[10px] text-gray-500 bg-gray-800 px-1.5 py-0.5 rounded">{q.answer_type}</span>
                       <span className="text-[10px] text-gray-500">{q.max_points} pts</span>
