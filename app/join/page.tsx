@@ -10,23 +10,29 @@ export default function JoinPage() {
 
   useEffect(() => {
     const supabase = createClient();
+    let cancelled = false;
 
-    // Handles hash-based implicit flow: #access_token=... fires SIGNED_IN
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (session) setReady(true);
-    });
+    async function init() {
+      // Case 1: session already in cookies (PKCE callback flow)
+      const { data: { session: existing } } = await supabase.auth.getSession();
+      if (existing) { if (!cancelled) setReady(true); return; }
 
-    // Also covers cookie-based sessions (e.g. user navigates back to /join)
-    supabase.auth.getSession().then(({ data }) => {
-      if (data.session) setReady(true);
-    });
+      // Case 2: Supabase implicit flow — token is in the URL hash
+      const hash = typeof window !== "undefined" ? window.location.hash : "";
+      if (hash) {
+        const params = new URLSearchParams(hash.substring(1));
+        const accessToken = params.get("access_token");
+        const refreshToken = params.get("refresh_token");
+        if (accessToken && refreshToken) {
+          const { data } = await supabase.auth.setSession({ access_token: accessToken, refresh_token: refreshToken });
+          if (data.session && !cancelled) { setReady(true); return; }
+        }
+      }
+    }
 
-    const timer = setTimeout(() => setTimedOut(true), 8000);
-
-    return () => {
-      subscription.unsubscribe();
-      clearTimeout(timer);
-    };
+    init();
+    const timer = setTimeout(() => { if (!cancelled) setTimedOut(true); }, 8000);
+    return () => { cancelled = true; clearTimeout(timer); };
   }, []);
 
   if (!ready) {
