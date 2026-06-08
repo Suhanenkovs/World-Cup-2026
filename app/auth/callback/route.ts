@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createServerClient } from "@supabase/ssr";
+import { createClient } from "@/lib/supabase/server";
 
 export async function GET(request: NextRequest) {
-  const { searchParams } = new URL(request.url);
+  const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get("code");
   const next = searchParams.get("next") ?? "/join";
 
@@ -10,28 +10,13 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(new URL(`${next}?auth_error=no_code`, request.url));
   }
 
-  const redirectResponse = NextResponse.redirect(new URL(next, request.url));
-
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll: () => request.cookies.getAll(),
-        setAll: (cookiesToSet) => {
-          cookiesToSet.forEach(({ name, value, options }) =>
-            redirectResponse.cookies.set(name, value, options)
-          );
-        },
-      },
-    }
-  );
-
+  const supabase = await createClient();
   const { error } = await supabase.auth.exchangeCodeForSession(code);
+
   if (error) {
     const msg = encodeURIComponent(error.message.slice(0, 80));
     return NextResponse.redirect(new URL(`${next}?auth_error=${msg}`, request.url));
   }
 
-  return redirectResponse;
+  return NextResponse.redirect(`${origin}${next}`);
 }
