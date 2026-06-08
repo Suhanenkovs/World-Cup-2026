@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { format } from "date-fns";
+import { formatInTimeZone } from "date-fns-tz";
 import { createClient } from "@/lib/supabase/client";
 import type { MatchWithTeams, Prediction, Team } from "@/types/database";
 import type { Stage } from "@/lib/constants";
@@ -97,7 +97,7 @@ function MatchRow({ match, pred, stage, userId, isPaid }: MatchRowProps) {
 
       {/* Date / group / venue */}
       <div className="text-xs w-28 shrink-0 space-y-0.5">
-        <div className="text-gray-400">{format(kickoff, "d MMM · HH:mm")}</div>
+        <div className="text-gray-400">{formatInTimeZone(kickoff, "Europe/Riga", "d MMM · HH:mm")}</div>
         <div><GroupOrStageBadge stage={match.stage} groupLetter={match.group_letter} /></div>
         {isLocked && !isFinished && <div className="text-amber-400">Locked</div>}
       </div>

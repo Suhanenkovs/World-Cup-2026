@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { notFound } from "next/navigation";
-import { format } from "date-fns";
+import { formatInTimeZone } from "date-fns-tz";
 import { STAGE_LABELS, type Stage } from "@/lib/constants";
 import type { MatchWithTeams } from "@/types/database";
 import { getFlagUrl } from "@/lib/teamFlags";
@@ -45,7 +45,7 @@ export default async function MatchDetailPage({
 
       <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6 mb-6">
         <div className="text-center text-xs text-gray-500 mb-6">
-          {format(kickoff, "EEEE, d MMMM yyyy")} at {format(kickoff, "HH:mm")}
+          {formatInTimeZone(kickoff, "Europe/Riga", "EEEE, d MMMM yyyy")} at {formatInTimeZone(kickoff, "Europe/Riga", "HH:mm")}
           {m.venue && <> &mdash; {m.venue}</>}
         </div>
 

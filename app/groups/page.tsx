@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { getFlagUrl } from "@/lib/teamFlags";
-import { format } from "date-fns";
+import { formatInTimeZone } from "date-fns-tz";
 import Link from "next/link";
 import type { MatchWithTeams } from "@/types/database";
 
@@ -105,7 +105,7 @@ function GroupFixtures({ matches }: { matches: MatchWithTeams[] }) {
             href={`/matches/${m.id}`}
             className="flex items-center justify-between gap-2 px-2 py-1.5 rounded-lg hover:bg-gray-800/60 transition-colors text-xs"
           >
-            <span className="text-gray-500 w-16 shrink-0">{format(kickoff, "d MMM HH:mm")}</span>
+            <span className="text-gray-500 w-16 shrink-0">{formatInTimeZone(kickoff, "Europe/Riga", "d MMM HH:mm")}</span>
             <div className="flex-1 flex items-center justify-end gap-1 min-w-0">
               <span className="text-white truncate">{m.home_team?.name ?? "TBD"}</span>
               {homeFlagSrc

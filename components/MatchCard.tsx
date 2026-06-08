@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { format } from "date-fns";
+import { formatInTimeZone } from "date-fns-tz";
 import type { MatchWithTeams, Team } from "@/types/database";
 import { STAGE_LABELS, type Stage } from "@/lib/constants";
 import { getFlagUrl } from "@/lib/teamFlags";
@@ -52,7 +52,7 @@ export default function MatchCard({ match }: { match: MatchWithTeams }) {
     >
       {/* Date / group / venue */}
       <div className="w-24 sm:w-32 shrink-0 text-xs space-y-1">
-        <div className="text-gray-300 font-medium">{format(kickoff, "d MMM · HH:mm")}</div>
+        <div className="text-gray-300 font-medium">{formatInTimeZone(kickoff, "Europe/Riga", "d MMM · HH:mm")}</div>
         <GroupOrStageBadge stage={match.stage} groupLetter={match.group_letter} />
         {match.venue && (
           <div className="text-gray-500 leading-snug hidden sm:block">{match.venue}</div>
