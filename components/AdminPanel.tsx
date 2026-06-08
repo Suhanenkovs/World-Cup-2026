@@ -554,8 +554,11 @@ export default function AdminPanel({ players, questions, prizeConfig }: Props) {
                       <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 text-xs">▼</span>
                     </div>
                   ) : (
-                    <input value={bonusAnswers[q.id] ?? ""} onChange={(e) => setBonusAnswers((a) => ({ ...a, [q.id]: e.target.value }))}
-                      placeholder="Correct answer…" className="flex-1 max-w-[220px] bg-gray-800 border border-gray-700 rounded-lg px-3 py-1.5 text-white text-xs focus:outline-none focus:border-amber-500" />
+                    <div className="flex flex-col gap-1 flex-1 max-w-[220px]">
+                      <input value={bonusAnswers[q.id] ?? ""} onChange={(e) => setBonusAnswers((a) => ({ ...a, [q.id]: e.target.value }))}
+                        placeholder="Correct answer…" className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-1.5 text-white text-xs focus:outline-none focus:border-amber-500" />
+                      <span className="text-[10px] text-gray-600">Multiple valid answers? Use <span className="font-mono text-gray-500">Team A|Team B</span></span>
+                    </div>
                   )}
                   <button onClick={() => resolveBonus(q.id)} className="text-xs bg-amber-700 hover:bg-amber-600 text-white px-3 py-1.5 rounded-lg transition-colors shrink-0">
                     Resolve
@@ -569,7 +572,7 @@ export default function AdminPanel({ players, questions, prizeConfig }: Props) {
 
         {/* Auto-resolve */}
         <div className="mt-5 pt-5 border-t border-gray-800">
-          <p className="text-xs text-gray-500 mb-2">Auto-resolve from football-data.org (tournament, goals, top scorer):</p>
+          <p className="text-xs text-gray-500 mb-2">Auto-resolve from football-data.org (tournament winner, finalists, top scorer, group goals). Multi-answer questions are handled automatically — both finalists and tied teams are accepted.</p>
           <button onClick={autoResolve} disabled={isPending}
             className="bg-gray-700 hover:bg-gray-600 disabled:opacity-40 text-white text-sm px-4 py-2 rounded-lg transition-colors">
             {isPending ? "Resolving…" : "Auto-resolve All"}
