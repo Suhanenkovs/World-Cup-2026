@@ -14,7 +14,7 @@ export default async function PredictionsPage() {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("paid, username")
+    .select("paid, username, name")
     .eq("id", user.id)
     .single();
 
@@ -48,7 +48,7 @@ export default async function PredictionsPage() {
         <div>
           <h1 className="text-2xl font-bold text-white">My Predictions</h1>
           <p className="text-sm text-gray-400 mt-1">
-            Hi, {profile?.username}! Edit your picks up until each match kicks off.
+            Hi, {(profile as any)?.name || profile?.username}! Edit your picks up until each match kicks off.
           </p>
         </div>
         <div className="flex items-center gap-4">

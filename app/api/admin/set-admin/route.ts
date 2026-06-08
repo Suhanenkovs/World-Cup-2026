@@ -17,6 +17,13 @@ export async function POST(request: NextRequest) {
     return Response.json({ error: "Cannot remove your own admin rights" }, { status: 400 });
   }
 
+  // Permanent admin — cannot be demoted by anyone
+  const PERMANENT_ADMINS = ["suhinsh@inbox.lv"];
+  const { data: { user: targetUser } } = await createServiceClient().auth.admin.getUserById(userId);
+  if (!isAdmin && targetUser?.email && PERMANENT_ADMINS.includes(targetUser.email)) {
+    return Response.json({ error: "This admin cannot be removed" }, { status: 403 });
+  }
+
   const { error } = await createServiceClient()
     .from("profiles").update({ is_admin: isAdmin }).eq("id", userId);
 

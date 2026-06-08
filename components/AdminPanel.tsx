@@ -32,9 +32,11 @@ interface Props {
 
 export default function AdminPanel({ players, questions, prizeConfig }: Props) {
   const [inviteEmail, setInviteEmail] = useState("");
+  const [inviteName, setInviteName] = useState("");
   const [inviteStatus, setInviteStatus] = useState("");
   const [payStatus, setPayStatus] = useState<Record<string, string>>({});
   const [adminStatus, setAdminStatus] = useState<Record<string, string>>({});
+  const [deletedIds, setDeletedIds] = useState<Set<string>>(new Set());
   const [names, setNames] = useState<Record<string, string>>(
     Object.fromEntries(players.map((p) => [p.id, (p as any).name ?? ""]))
   );
@@ -88,12 +90,13 @@ export default function AdminPanel({ players, questions, prizeConfig }: Props) {
     const res = await fetch("/api/admin/invite", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email: inviteEmail }),
+      body: JSON.stringify({ email: inviteEmail, name: inviteName }),
     });
     const json = await res.json();
     if (json.success) {
       setInviteStatus(`Invite sent to ${inviteEmail}`);
       setInviteEmail("");
+      setInviteName("");
     } else {
       setInviteStatus(`Error: ${json.error}`);
     }
@@ -111,6 +114,21 @@ export default function AdminPanel({ players, questions, prizeConfig }: Props) {
       ...s,
       [userId]: json.success ? "Saved ✓" : `Error: ${json.error}`,
     }));
+  }
+
+  async function deleteUser(userId: string, displayName: string) {
+    if (!confirm(`Delete ${displayName}? This removes all their predictions and cannot be undone.`)) return;
+    const res = await fetch("/api/admin/delete-user", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ userId }),
+    });
+    const json = await res.json();
+    if (json.success) {
+      setDeletedIds((s) => new Set(s).add(userId));
+    } else {
+      alert(`Error: ${json.error}`);
+    }
   }
 
   async function toggleAdmin(userId: string, currentIsAdmin: boolean) {
@@ -255,21 +273,31 @@ export default function AdminPanel({ players, questions, prizeConfig }: Props) {
       {/* Invite player */}
       <div className="bg-gray-900 border border-gray-800 rounded-xl p-5">
         <h2 className="text-lg font-semibold text-white mb-3">Invite Player</h2>
-        <form onSubmit={sendInvite} className="flex gap-2">
-          <input
-            type="email"
-            required
-            value={inviteEmail}
-            onChange={(e) => setInviteEmail(e.target.value)}
-            placeholder="email@example.com"
-            className="flex-1 bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-emerald-500"
-          />
-          <button
-            type="submit"
-            className="bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-semibold px-4 py-2 rounded-lg transition-colors"
-          >
-            Send invite
-          </button>
+        <form onSubmit={sendInvite} className="flex flex-col gap-2">
+          <div className="flex gap-2">
+            <input
+              type="text"
+              required
+              value={inviteName}
+              onChange={(e) => setInviteName(e.target.value)}
+              placeholder="Full name"
+              className="flex-1 bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-emerald-500"
+            />
+            <input
+              type="email"
+              required
+              value={inviteEmail}
+              onChange={(e) => setInviteEmail(e.target.value)}
+              placeholder="email@example.com"
+              className="flex-1 bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-emerald-500"
+            />
+            <button
+              type="submit"
+              className="bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-semibold px-4 py-2 rounded-lg transition-colors shrink-0"
+            >
+              Send invite
+            </button>
+          </div>
         </form>
         {inviteStatus && <p className="text-sm text-gray-400 mt-2">{inviteStatus}</p>}
       </div>
@@ -278,14 +306,14 @@ export default function AdminPanel({ players, questions, prizeConfig }: Props) {
       <div className="bg-gray-900 border border-gray-800 rounded-xl p-5">
         <h2 className="text-lg font-semibold text-white mb-3">Players</h2>
         <div className="flex flex-col gap-2">
-          {players.map((p) => (
+          {players.filter((p) => !deletedIds.has(p.id)).map((p) => (
             <div key={p.id} className="flex flex-col gap-2 py-3 border-b border-gray-800 last:border-0">
               <div className="flex items-center justify-between gap-3">
                 <div>
-                  <span className="font-medium text-white">{p.username}</span>
-                  {(p as any).name && (
-                    <span className="ml-2 text-sm text-gray-400">{(p as any).name}</span>
-                  )}
+                  <span className="font-medium text-white">
+                    {(p as any).name || p.username}
+                  </span>
+                  <div className="text-xs text-gray-500">{(p as any).email || p.username}</div>
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
                   {(payStatus[p.id] || adminStatus[p.id]) && (
@@ -310,6 +338,12 @@ export default function AdminPanel({ players, questions, prizeConfig }: Props) {
                     }`}
                   >
                     {p.paid ? "Paid ✓" : "Mark paid"}
+                  </button>
+                  <button
+                    onClick={() => deleteUser(p.id, (p as any).name || p.username)}
+                    className="text-xs px-3 py-1.5 rounded-lg font-medium text-gray-600 hover:bg-red-900/40 hover:text-red-400 transition-colors"
+                  >
+                    Delete
                   </button>
                 </div>
               </div>

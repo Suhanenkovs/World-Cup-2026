@@ -16,7 +16,7 @@ export async function POST(request: NextRequest) {
     return Response.json({ error: "Forbidden" }, { status: 403 });
   }
 
-  const { email } = await request.json();
+  const { email, name } = await request.json();
   if (!email || typeof email !== "string") {
     return Response.json({ error: "Email required" }, { status: 400 });
   }
@@ -28,6 +28,13 @@ export async function POST(request: NextRequest) {
   });
 
   if (error) return Response.json({ error: error.message }, { status: 500 });
+
+  // Save real name immediately if provided
+  if (name?.trim()) {
+    await serviceClient.from("profiles")
+      .update({ name: name.trim() })
+      .eq("id", data.user.id);
+  }
 
   return Response.json({ success: true, userId: data.user.id });
 }
