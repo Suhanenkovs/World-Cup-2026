@@ -92,7 +92,7 @@ function MatchRow({ match, pred, stage, userId, isPaid }: MatchRowProps) {
   const pts = pred?.points_earned;
 
   return (
-    <div className={`bg-gray-900 border rounded-xl px-4 py-3 flex flex-col sm:flex-row sm:items-center gap-3
+    <div className={`bg-gray-900/75 backdrop-blur-sm border rounded-xl px-4 py-3 flex flex-col sm:flex-row sm:items-center gap-3
       ${isFinished ? "border-gray-700" : "border-gray-800"}`}>
 
       {/* Date / group / venue */}

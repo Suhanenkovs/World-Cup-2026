@@ -43,7 +43,7 @@ export default async function MatchDetailPage({
         {m.group_letter && ` — Group ${m.group_letter}`}
       </div>
 
-      <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6 mb-6">
+      <div className="bg-gray-900/75 backdrop-blur-sm border border-white/10 rounded-2xl p-6 mb-6">
         <div className="text-center text-xs text-gray-500 mb-6">
           {formatInTimeZone(kickoff, "Europe/Riga", "EEEE, d MMMM yyyy")} at {formatInTimeZone(kickoff, "Europe/Riga", "HH:mm")}
           {m.venue && <> &mdash; {m.venue}</>}
@@ -104,7 +104,7 @@ export default async function MatchDetailPage({
             return (
               <div
                 key={p.id}
-                className="bg-gray-900 border border-gray-800 rounded-xl px-4 py-3 flex items-center justify-between"
+                className="bg-gray-900/75 backdrop-blur-sm border border-white/10 rounded-xl px-4 py-3 flex items-center justify-between"
               >
                 <span className="font-medium text-white">{user?.name || user?.username || "—"}</span>
                 <div className="flex items-center gap-4">

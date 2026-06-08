@@ -180,7 +180,7 @@ export default async function GroupsPage() {
         {groups.map((g) => {
           const letter = g.group.replace("GROUP_", "");
           return (
-            <div key={g.group} className="bg-gray-900 border border-gray-800 rounded-xl p-4">
+            <div key={g.group} className="bg-gray-900/75 backdrop-blur-sm border border-white/10 rounded-xl p-4">
               <h2 className="text-xs font-bold uppercase tracking-widest text-emerald-400 mb-3">
                 Group {letter}
               </h2>
@@ -192,7 +192,7 @@ export default async function GroupsPage() {
 
         {/* Fallback cards when standings API not yet populated */}
         {dbOnlyLetters.map((letter) => (
-          <div key={letter} className="bg-gray-900 border border-gray-800 rounded-xl p-4">
+          <div key={letter} className="bg-gray-900/75 backdrop-blur-sm border border-white/10 rounded-xl p-4">
             <h2 className="text-xs font-bold uppercase tracking-widest text-emerald-400 mb-3">
               Group {letter}
             </h2>

@@ -23,7 +23,7 @@ export async function POST(request: NextRequest) {
 
   const serviceClient = createServiceClient();
   const { data, error } = await serviceClient.auth.admin.inviteUserByEmail(email, {
-    redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/join`,
+    redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback?next=/join`,
     data: { invited_at: new Date().toISOString() },
   });
 

@@ -52,7 +52,7 @@ export default async function PredictionsPage() {
           </p>
         </div>
         <div className="flex items-center gap-4">
-          <div className="bg-gray-900 border border-gray-800 rounded-xl px-4 py-2 text-center">
+          <div className="bg-gray-900/75 backdrop-blur-sm border border-white/10 rounded-xl px-4 py-2 text-center">
             <div className="text-xs text-gray-400">Points</div>
             <div className="text-xl font-bold text-emerald-400">{totalPoints}</div>
           </div>
