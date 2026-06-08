@@ -71,7 +71,7 @@ export default async function BonusPage({
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-1 mb-6 bg-gray-900/75 backdrop-blur-sm border border-white/10 rounded-lg p-1 w-fit">
+      <div className="flex gap-1 mb-6 bg-gray-900/50 backdrop-blur-sm border border-white/10 rounded-lg p-1 w-fit">
         <a
           href="/bonus"
           className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${

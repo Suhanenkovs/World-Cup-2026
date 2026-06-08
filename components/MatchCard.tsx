@@ -48,7 +48,7 @@ export default function MatchCard({ match }: { match: MatchWithTeams }) {
   return (
     <Link
       href={`/matches/${match.id}`}
-      className="bg-gray-900/75 backdrop-blur-sm border border-white/10 hover:border-white/25 rounded-xl px-4 py-3 transition-colors flex items-center gap-3 sm:gap-4"
+      className="bg-gray-900/50 backdrop-blur-sm border border-white/10 hover:border-white/25 rounded-xl px-4 py-3 transition-colors flex items-center gap-3 sm:gap-4"
     >
       {/* Date / group / venue */}
       <div className="w-24 sm:w-32 shrink-0 text-xs space-y-1">

@@ -201,7 +201,7 @@ export default function BonusForm({ questions, answerMap, userId, isLocked, team
         const locked = isLocked || isResolved;
 
         return (
-          <div key={q.id} className="bg-gray-900/75 backdrop-blur-sm border border-white/10 rounded-xl p-4">
+          <div key={q.id} className="bg-gray-900/50 backdrop-blur-sm border border-white/10 rounded-xl p-4">
             <div className="flex items-start justify-between gap-2 mb-3">
               <div>
                 <span className="text-xs text-amber-400 font-semibold uppercase tracking-wide">

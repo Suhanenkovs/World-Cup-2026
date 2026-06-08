@@ -42,8 +42,8 @@ export default function BonusAllAnswers({ questions, allAnswers, players }: Prop
     <div className="overflow-x-auto rounded-xl border border-gray-800">
       <table className="w-full text-sm border-collapse">
         <thead>
-          <tr className="bg-gray-900/90 backdrop-blur-sm">
-            <th className="text-left px-4 py-3 text-gray-400 font-medium text-xs uppercase tracking-wider w-48 sticky left-0 bg-gray-900/90 backdrop-blur-sm border-r border-white/10">
+          <tr className="bg-gray-900/65 backdrop-blur-sm">
+            <th className="text-left px-4 py-3 text-gray-400 font-medium text-xs uppercase tracking-wider w-48 sticky left-0 bg-gray-900/65 backdrop-blur-sm border-r border-white/10">
               Question
             </th>
             {players.map((p) => (

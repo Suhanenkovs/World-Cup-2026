@@ -33,7 +33,7 @@ function MatchCard({ match, highlight }: { match: MatchWithTeams | undefined; hi
   const hasScore = match && match.home_score !== null;
   return (
     <div className={`w-28 rounded-md border text-[10px] shrink-0 overflow-hidden
-      ${match ? "bg-gray-900/75 border-white/10" : "bg-gray-900/30 border-gray-800/40"}
+      ${match ? "bg-gray-900/50 border-white/10" : "bg-gray-900/30 border-gray-800/40"}
       ${highlight ? "ring-1 ring-amber-500/60" : ""}`}>
       {match ? (
         <div className="px-2 py-1 flex flex-col gap-px">

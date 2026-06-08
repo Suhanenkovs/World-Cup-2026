@@ -32,7 +32,7 @@ export default async function LeaderboardPage() {
             { label: "2nd place", value: `€${prizes.second}`, accent: "text-gray-300" },
             { label: "3rd place", value: `€${prizes.third}`, accent: "text-amber-600" },
           ].map(({ label, value, accent }) => (
-            <div key={label} className="bg-gray-900/75 backdrop-blur-sm border border-white/10 rounded-xl px-4 py-3 text-center">
+            <div key={label} className="bg-gray-900/50 backdrop-blur-sm border border-white/10 rounded-xl px-4 py-3 text-center">
               <div className="text-xs text-gray-500">{label}</div>
               <div className={`text-xl font-bold mt-0.5 ${accent}`}>{value}</div>
             </div>
@@ -40,7 +40,7 @@ export default async function LeaderboardPage() {
         </div>
       )}
 
-      <div className="bg-gray-900/75 backdrop-blur-sm border border-white/10 rounded-xl overflow-hidden">
+      <div className="bg-gray-900/50 backdrop-blur-sm border border-white/10 rounded-xl overflow-hidden">
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-gray-800 text-xs text-gray-500 uppercase tracking-wide">
