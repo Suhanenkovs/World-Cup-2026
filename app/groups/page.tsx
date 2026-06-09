@@ -105,12 +105,13 @@ function GroupFixtures({ matches }: { matches: MatchWithTeams[] }) {
           <Link
             key={m.id}
             href={`/matches/${m.id}`}
-            className="grid grid-cols-[64px_1fr_44px_1fr] items-center gap-x-1 px-2 py-1.5 rounded-lg hover:bg-gray-800/60 transition-colors"
+            className="grid grid-cols-[60px_1fr_40px_1fr] items-center gap-x-1 px-2 py-1.5 rounded-lg hover:bg-gray-800/60 transition-colors w-full"
           >
-            <span className="text-gray-500 text-[10px]">{formatInTimeZone(kickoff, "Europe/Riga", "d MMM HH:mm")}</span>
+            <span className="text-gray-500 text-[10px] truncate">{formatInTimeZone(kickoff, "Europe/Riga", "d MMM HH:mm")}</span>
 
-            <div className="flex items-center justify-end gap-1">
-              <span className="text-white font-mono text-[11px]">{getTeamTLA(m.home_team?.name)}</span>
+            {/* Home: name truncates left, flag hugs center */}
+            <div className="flex items-center justify-end gap-1 min-w-0 overflow-hidden">
+              <span className="text-white text-[11px] truncate">{m.home_team?.name ?? "TBD"}</span>
               {homeFlagSrc
                 // eslint-disable-next-line @next/next/no-img-element
                 ? <img src={homeFlagSrc} alt="" className="w-5 h-3.5 object-cover rounded-sm border border-gray-700 shrink-0" />
@@ -130,13 +131,14 @@ function GroupFixtures({ matches }: { matches: MatchWithTeams[] }) {
               )}
             </div>
 
-            <div className="flex items-center gap-1">
+            {/* Away: flag hugs center, name truncates right */}
+            <div className="flex items-center gap-1 min-w-0 overflow-hidden">
               {awayFlagSrc
                 // eslint-disable-next-line @next/next/no-img-element
                 ? <img src={awayFlagSrc} alt="" className="w-5 h-3.5 object-cover rounded-sm border border-gray-700 shrink-0" />
                 : <span className="w-5 h-3.5 bg-gray-700 rounded-sm shrink-0 inline-block" />
               }
-              <span className="text-white font-mono text-[11px]">{getTeamTLA(m.away_team?.name)}</span>
+              <span className="text-white text-[11px] truncate">{m.away_team?.name ?? "TBD"}</span>
             </div>
           </Link>
         );
