@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { notFound } from "next/navigation";
+import { BackButton } from "@/components/BackButton";
 import { formatInTimeZone } from "date-fns-tz";
 import { STAGE_LABELS, POINTS_EXACT_SCORE, POINTS_GOAL_DIFF, type Stage } from "@/lib/constants";
 import type { MatchWithTeams } from "@/types/database";
@@ -39,6 +40,7 @@ export default async function MatchDetailPage({
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-8">
+      <BackButton />
       <div className="text-xs text-emerald-400 uppercase tracking-wider mb-2">
         {STAGE_LABELS[m.stage as Stage]}
         {m.group_letter && ` — Group ${m.group_letter}`}
