@@ -105,9 +105,11 @@ function GroupFixtures({ matches }: { matches: MatchWithTeams[] }) {
             href={`/matches/${m.id}`}
             className="flex items-center justify-between gap-2 px-2 py-1.5 rounded-lg hover:bg-gray-800/60 transition-colors text-xs"
           >
-            <span className="text-gray-500 w-16 shrink-0">{formatInTimeZone(kickoff, "Europe/Riga", "d MMM HH:mm")}</span>
+            <span className="text-gray-500 w-16 shrink-0 text-[10px]">{formatInTimeZone(kickoff, "Europe/Riga", "d MMM HH:mm")}</span>
             <div className="flex-1 flex items-center justify-end gap-1 min-w-0">
-              <span className="text-white truncate">{m.home_team?.name ?? "TBD"}</span>
+              <span className="text-white font-mono text-[11px] shrink-0">
+                {m.home_team ? (m.home_team.short_name ?? m.home_team.name).slice(0, 3).toUpperCase() : "TBD"}
+              </span>
               {homeFlagSrc
                 // eslint-disable-next-line @next/next/no-img-element
                 ? <img src={homeFlagSrc} alt="" className="w-5 h-3.5 object-cover rounded-sm border border-gray-700 shrink-0" />
@@ -128,7 +130,9 @@ function GroupFixtures({ matches }: { matches: MatchWithTeams[] }) {
                 ? <img src={awayFlagSrc} alt="" className="w-5 h-3.5 object-cover rounded-sm border border-gray-700 shrink-0" />
                 : <span className="w-5 h-3.5 bg-gray-700 rounded-sm shrink-0 inline-block" />
               }
-              <span className="text-white truncate">{m.away_team?.name ?? "TBD"}</span>
+              <span className="text-white font-mono text-[11px] shrink-0">
+                {m.away_team ? (m.away_team.short_name ?? m.away_team.name).slice(0, 3).toUpperCase() : "TBD"}
+              </span>
             </div>
             {m.status === "live" && (
               <span className="text-xs bg-red-600 text-white px-1.5 py-0.5 rounded-full animate-pulse shrink-0">LIVE</span>
