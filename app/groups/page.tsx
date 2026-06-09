@@ -40,7 +40,28 @@ async function fetchStandings(): Promise<FDGroup[]> {
 
 // ── Sub-components ────────────────────────────────────────────────────────────
 
-function StandingsTable({ rows }: { rows: FDTableRow[] }) {
+// fd.org uses different name variants — map to our DB english names
+const FD_TO_DB: Record<string, string> = {
+  "Korea Republic":                   "South Korea",
+  "Republic of Korea":                "South Korea",
+  "Türkiye":                          "Turkey",
+  "Côte d'Ivoire":                    "Ivory Coast",
+  "Cote d'Ivoire":                    "Ivory Coast",
+  "Cabo Verde":                       "Cape Verde",
+  "IR Iran":                          "Iran",
+  "United States":                    "USA",
+  "United States of America":         "USA",
+  "Congo DR":                         "DR Congo",
+  "Democratic Republic of the Congo": "DR Congo",
+  "Bosnia and Herzegovina":           "Bosnia & Herzegovina",
+  "Bosnia-Herzegovina":               "Bosnia & Herzegovina",
+};
+
+function fdNameToDb(fdName: string): string {
+  return FD_TO_DB[fdName] ?? fdName;
+}
+
+function StandingsTable({ rows, teamApiIds }: { rows: FDTableRow[]; teamApiIds: Map<string, string> }) {
   return (
     <table className="w-full text-xs">
       <thead>
@@ -59,6 +80,8 @@ function StandingsTable({ rows }: { rows: FDTableRow[] }) {
         {rows.map((row, i) => {
           const flagSrc = getFlagUrl(row.team.name) ?? getFlagUrl(row.team.shortName);
           const qualifies = i < 2;
+          const dbName = fdNameToDb(row.team.name);
+          const apiId = teamApiIds.get(dbName.toLowerCase());
           return (
             <tr
               key={row.team.tla}
@@ -66,14 +89,25 @@ function StandingsTable({ rows }: { rows: FDTableRow[] }) {
             >
               <td className="py-1.5 pl-1 text-gray-500">{row.position}</td>
               <td className="py-1.5">
-                <Link href={`/teams/${row.team.id}`} className="flex items-center gap-1.5 hover:text-amber-400 transition-colors group">
-                  {flagSrc
-                    // eslint-disable-next-line @next/next/no-img-element
-                    ? <img src={flagSrc} alt={row.team.name} className="w-5 h-3.5 object-cover rounded-sm border border-gray-700 shrink-0" />
-                    : <span className="w-5 h-3.5 rounded-sm bg-gray-700 shrink-0 inline-block" />
-                  }
-                  <span className="text-white font-medium truncate group-hover:text-amber-400 transition-colors">{row.team.shortName}</span>
-                </Link>
+                {apiId ? (
+                  <Link href={`/teams/${apiId}`} className="flex items-center gap-1.5 hover:text-amber-400 transition-colors group">
+                    {flagSrc
+                      // eslint-disable-next-line @next/next/no-img-element
+                      ? <img src={flagSrc} alt={row.team.name} className="w-5 h-3.5 object-cover rounded-sm border border-gray-700 shrink-0" />
+                      : <span className="w-5 h-3.5 rounded-sm bg-gray-700 shrink-0 inline-block" />
+                    }
+                    <span className="text-white font-medium truncate group-hover:text-amber-400 transition-colors">{row.team.shortName}</span>
+                  </Link>
+                ) : (
+                  <div className="flex items-center gap-1.5">
+                    {flagSrc
+                      // eslint-disable-next-line @next/next/no-img-element
+                      ? <img src={flagSrc} alt={row.team.name} className="w-5 h-3.5 object-cover rounded-sm border border-gray-700 shrink-0" />
+                      : <span className="w-5 h-3.5 rounded-sm bg-gray-700 shrink-0 inline-block" />
+                    }
+                    <span className="text-white font-medium truncate">{row.team.shortName}</span>
+                  </div>
+                )}
               </td>
               <td className="py-1.5 text-center text-gray-400">{row.playedGames}</td>
               <td className="py-1.5 text-center text-gray-400">{row.won}</td>
@@ -105,21 +139,20 @@ function GroupFixtures({ matches }: { matches: MatchWithTeams[] }) {
           <Link
             key={m.id}
             href={`/matches/${m.id}`}
-            className="grid grid-cols-[60px_1fr_40px_1fr] items-center gap-x-1 px-2 py-1.5 rounded-lg hover:bg-gray-800/60 transition-colors w-full"
+            className="flex items-center justify-between gap-2 px-2 py-1.5 rounded-lg hover:bg-gray-800/60 transition-colors"
           >
-            <span className="text-gray-500 text-[10px] truncate">{formatInTimeZone(kickoff, "Europe/Riga", "d MMM HH:mm")}</span>
+            <span className="text-gray-500 text-[10px] shrink-0">{formatInTimeZone(kickoff, "Europe/Riga", "d MMM HH:mm")}</span>
 
-            {/* Home: name truncates left, flag hugs center */}
-            <div className="flex items-center justify-end gap-1 min-w-0 overflow-hidden">
-              <span className="text-white text-[11px] truncate">{m.home_team?.name ?? "TBD"}</span>
+            <div className="flex items-center gap-1 shrink-0">
+              <span className="text-white font-mono text-[11px]">{getTeamTLA(m.home_team?.name)}</span>
               {homeFlagSrc
                 // eslint-disable-next-line @next/next/no-img-element
-                ? <img src={homeFlagSrc} alt="" className="w-5 h-3.5 object-cover rounded-sm border border-gray-700 shrink-0" />
-                : <span className="w-5 h-3.5 bg-gray-700 rounded-sm shrink-0 inline-block" />
+                ? <img src={homeFlagSrc} alt="" className="w-5 h-3.5 object-cover rounded-sm border border-gray-700" />
+                : <span className="w-5 h-3.5 bg-gray-700 rounded-sm inline-block" />
               }
             </div>
 
-            <div className="text-center text-xs">
+            <div className="text-center text-xs shrink-0 w-8">
               {hasScore ? (
                 <span className={`font-mono font-bold ${isLive ? "text-emerald-400" : "text-white"}`}>
                   {m.home_score}–{m.away_score}
@@ -131,14 +164,13 @@ function GroupFixtures({ matches }: { matches: MatchWithTeams[] }) {
               )}
             </div>
 
-            {/* Away: flag hugs center, name truncates right */}
-            <div className="flex items-center gap-1 min-w-0 overflow-hidden">
+            <div className="flex items-center gap-1 shrink-0">
               {awayFlagSrc
                 // eslint-disable-next-line @next/next/no-img-element
-                ? <img src={awayFlagSrc} alt="" className="w-5 h-3.5 object-cover rounded-sm border border-gray-700 shrink-0" />
-                : <span className="w-5 h-3.5 bg-gray-700 rounded-sm shrink-0 inline-block" />
+                ? <img src={awayFlagSrc} alt="" className="w-5 h-3.5 object-cover rounded-sm border border-gray-700" />
+                : <span className="w-5 h-3.5 bg-gray-700 rounded-sm inline-block" />
               }
-              <span className="text-white text-[11px] truncate">{m.away_team?.name ?? "TBD"}</span>
+              <span className="text-white font-mono text-[11px]">{getTeamTLA(m.away_team?.name)}</span>
             </div>
           </Link>
         );
@@ -152,14 +184,21 @@ function GroupFixtures({ matches }: { matches: MatchWithTeams[] }) {
 export default async function GroupsPage() {
   const supabase = await createClient();
 
-  const [fdGroups, { data: matches }] = await Promise.all([
+  const [fdGroups, { data: matches }, { data: dbTeams }] = await Promise.all([
     fetchStandings(),
     supabase
       .from("matches")
       .select("*, home_team:home_team_id(*), away_team:away_team_id(*)")
       .eq("stage", "group")
       .order("scheduled_at", { ascending: true }),
+    supabase.from("teams").select("name, api_id"),
   ]);
+
+  // name (lowercase) → api_id for standings links
+  const teamApiIds = new Map<string, string>();
+  for (const t of dbTeams ?? []) {
+    teamApiIds.set(t.name.toLowerCase(), t.api_id);
+  }
 
   // Bucket DB matches by group letter
   const matchesByGroup = new Map<string, MatchWithTeams[]>();
@@ -191,7 +230,7 @@ export default async function GroupsPage() {
               <h2 className="text-xs font-bold uppercase tracking-widest text-emerald-400 mb-3">
                 Group {letter}
               </h2>
-              <StandingsTable rows={g.table} />
+              <StandingsTable rows={g.table} teamApiIds={teamApiIds} />
               <GroupFixtures matches={matchesByGroup.get(letter) ?? []} />
             </div>
           );
