@@ -48,6 +48,7 @@ const FD_TO_DB: Record<string, string> = {
   "Côte d'Ivoire":                    "Ivory Coast",
   "Cote d'Ivoire":                    "Ivory Coast",
   "Cabo Verde":                       "Cape Verde",
+  "Cape Verde Islands":               "Cape Verde",
   "IR Iran":                          "Iran",
   "United States":                    "USA",
   "United States of America":         "USA",
