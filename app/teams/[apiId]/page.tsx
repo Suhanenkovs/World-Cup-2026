@@ -10,33 +10,29 @@ export const revalidate = 300;
 
 // ── football-data.org types ────────────────────────────────────────────────
 
-interface FDTeamInfo {
-  id: number;
-  name: string;
-  shortName: string;
-  tla: string;
-  type: string | null;
-  venue: string | null;
-  coach: { name: string | null; nationality: string | null } | null;
-}
-
 interface FDScorer {
   player: { id: number; name: string };
-  team: { id: number };
+  team: { id: number; name: string };
   goals: number;
   assists: number | null;
   penalties: number | null;
 }
 
-async function fetchTeamInfo(apiId: string): Promise<FDTeamInfo | null> {
-  try {
-    const res = await fetch(`https://api.football-data.org/v4/teams/${apiId}`, {
-      headers: { "X-Auth-Token": process.env.FOOTBALL_DATA_API_KEY! },
-      next: { revalidate: 3600 },
-    });
-    if (!res.ok) return null;
-    return await res.json() as FDTeamInfo;
-  } catch { return null; }
+// football-data.org uses different name variants than our DB
+const FD_NAME_ALIASES: Record<string, string[]> = {
+  "South Korea":          ["Korea Republic", "Republic of Korea"],
+  "Turkey":               ["Türkiye"],
+  "Ivory Coast":          ["Côte d'Ivoire", "Cote d'Ivoire"],
+  "Cape Verde":           ["Cabo Verde"],
+  "Iran":                 ["IR Iran"],
+  "USA":                  ["United States", "United States of America"],
+  "DR Congo":             ["Congo DR", "Democratic Republic of the Congo"],
+  "Bosnia & Herzegovina": ["Bosnia and Herzegovina", "Bosnia-Herzegovina"],
+};
+
+function matchesTeamName(fdName: string, dbName: string): boolean {
+  if (fdName === dbName) return true;
+  return (FD_NAME_ALIASES[dbName] ?? []).includes(fdName);
 }
 
 async function fetchScorers(): Promise<FDScorer[]> {
@@ -117,34 +113,27 @@ export default async function TeamPage({
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const [{ data: dbTeam }, teamInfo, allScorers] = await Promise.all([
+  const [{ data: dbTeam }, allScorers] = await Promise.all([
     supabase.from("teams").select("*").eq("api_id", apiId).maybeSingle(),
-    fetchTeamInfo(apiId),
     fetchScorers(),
   ]);
 
-  if (!teamInfo && !dbTeam) notFound();
+  if (!dbTeam) notFound();
 
-  // Guard: reject club data
-  const isNational = !teamInfo?.type || teamInfo.type === "NATIONAL";
-  const safeInfo   = isNational ? teamInfo : null;
-
-  const teamName = safeInfo?.name ?? dbTeam?.name ?? "Team";
-  const flagSrc  = dbTeam?.flag_url ?? getFlagUrl(teamName);
+  const teamName = dbTeam.name;
+  const flagSrc  = dbTeam.flag_url ?? getFlagUrl(teamName);
 
   // Fetch this team's WC matches from our DB
-  const { data: matchRows } = dbTeam
-    ? await supabase
-        .from("matches")
-        .select("*, home_team:home_team_id(*), away_team:away_team_id(*)")
-        .or(`home_team_id.eq.${dbTeam.id},away_team_id.eq.${dbTeam.id}`)
-        .order("scheduled_at", { ascending: true })
-    : { data: [] };
+  const { data: matchRows } = await supabase
+    .from("matches")
+    .select("*, home_team:home_team_id(*), away_team:away_team_id(*)")
+    .or(`home_team_id.eq.${dbTeam.id},away_team_id.eq.${dbTeam.id}`)
+    .order("scheduled_at", { ascending: true });
 
   const matches = (matchRows ?? []) as MatchWithTeams[];
 
-  // Filter scorers for this team
-  const teamScorers = allScorers.filter((s) => String(s.team.id) === apiId);
+  // Filter scorers by team name (FD uses different IDs than our DB)
+  const teamScorers = allScorers.filter((s) => matchesTeamName(s.team.name, teamName));
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-8">
@@ -162,24 +151,11 @@ export default async function TeamPage({
         }
         <div>
           <h1 className="text-3xl font-bold text-white">{teamName}</h1>
-          <div className="flex items-center gap-3 mt-1 text-sm text-gray-400">
-            {safeInfo?.tla && <span className="font-mono text-gray-500">{safeInfo.tla}</span>}
-            {dbTeam?.group_letter && <span>Group {dbTeam.group_letter}</span>}
-            {safeInfo?.venue && <span className="hidden sm:inline text-gray-500">{safeInfo.venue}</span>}
-          </div>
-        </div>
-      </div>
-
-      {/* Coach */}
-      {safeInfo?.coach?.name && (
-        <div className="bg-gray-900/50 backdrop-blur-sm border border-white/10 rounded-xl px-4 py-3 mb-6 flex items-center gap-3 flex-wrap">
-          <span className="text-xs text-gray-500 uppercase tracking-wider font-semibold">Head Coach</span>
-          <span className="text-white font-semibold">{safeInfo.coach.name}</span>
-          {safeInfo.coach.nationality && (
-            <span className="text-gray-400 text-sm">{safeInfo.coach.nationality}</span>
+          {dbTeam.group_letter && (
+            <div className="mt-1 text-sm text-gray-400">Group {dbTeam.group_letter}</div>
           )}
         </div>
-      )}
+      </div>
 
       {/* Matches */}
       {matches.length > 0 && (
