@@ -7,6 +7,7 @@ import type { MatchWithTeams, Prediction, Team } from "@/types/database";
 import type { Stage } from "@/lib/constants";
 import { POINTS_CORRECT_RESULT, POINTS_EXACT_SCORE, POINTS_GOAL_DIFF, STAGE_LABELS } from "@/lib/constants";
 import { getFlagUrl } from "@/lib/teamFlags";
+import { getTeamTLA } from "@/lib/teamTLA";
 
 function Flag({ team }: { team: Team | null }) {
   if (!team) return null;
@@ -110,7 +111,7 @@ function MatchRow({ match, pred, stage, userId, isPaid }: MatchRowProps) {
       <div className="flex-1 grid grid-cols-[1fr_auto_1fr] items-center gap-2 text-sm">
         <div className="flex items-center justify-end gap-1.5 min-w-0">
           <span className="hidden sm:block font-medium text-white truncate">{match.home_team?.name ?? "TBD"}</span>
-          <span className="sm:hidden font-medium text-white shrink-0">{match.home_team ? (match.home_team.short_name ?? match.home_team.name).slice(0, 3).toUpperCase() : "TBD"}</span>
+          <span className="sm:hidden font-medium text-white shrink-0">{getTeamTLA(match.home_team?.name)}</span>
           <Flag team={match.home_team} />
         </div>
 
@@ -168,7 +169,7 @@ function MatchRow({ match, pred, stage, userId, isPaid }: MatchRowProps) {
         <div className="flex items-center gap-1.5 min-w-0">
           <Flag team={match.away_team} />
           <span className="hidden sm:block font-medium text-white truncate">{match.away_team?.name ?? "TBD"}</span>
-          <span className="sm:hidden font-medium text-white shrink-0">{match.away_team ? (match.away_team.short_name ?? match.away_team.name).slice(0, 3).toUpperCase() : "TBD"}</span>
+          <span className="sm:hidden font-medium text-white shrink-0">{getTeamTLA(match.away_team?.name)}</span>
         </div>
       </div>
 

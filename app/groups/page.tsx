@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { getFlagUrl } from "@/lib/teamFlags";
+import { getTeamTLA } from "@/lib/teamTLA";
 import { formatInTimeZone } from "date-fns-tz";
 import Link from "next/link";
 import type { MatchWithTeams } from "@/types/database";
@@ -108,7 +109,7 @@ function GroupFixtures({ matches }: { matches: MatchWithTeams[] }) {
             <span className="text-gray-500 w-16 shrink-0 text-[10px]">{formatInTimeZone(kickoff, "Europe/Riga", "d MMM HH:mm")}</span>
             <div className="flex-1 flex items-center justify-end gap-1 min-w-0">
               <span className="text-white font-mono text-[11px] shrink-0">
-                {m.home_team ? (m.home_team.short_name ?? m.home_team.name).slice(0, 3).toUpperCase() : "TBD"}
+                {getTeamTLA(m.home_team?.name)}
               </span>
               {homeFlagSrc
                 // eslint-disable-next-line @next/next/no-img-element
@@ -131,7 +132,7 @@ function GroupFixtures({ matches }: { matches: MatchWithTeams[] }) {
                 : <span className="w-5 h-3.5 bg-gray-700 rounded-sm shrink-0 inline-block" />
               }
               <span className="text-white font-mono text-[11px] shrink-0">
-                {m.away_team ? (m.away_team.short_name ?? m.away_team.name).slice(0, 3).toUpperCase() : "TBD"}
+                {getTeamTLA(m.away_team?.name)}
               </span>
             </div>
             {m.status === "live" && (

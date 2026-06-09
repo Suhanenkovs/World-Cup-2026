@@ -3,6 +3,7 @@ import { formatInTimeZone } from "date-fns-tz";
 import type { MatchWithTeams, Team } from "@/types/database";
 import { STAGE_LABELS, type Stage } from "@/lib/constants";
 import { getFlagUrl } from "@/lib/teamFlags";
+import { getTeamTLA } from "@/lib/teamTLA";
 
 function StatusBadge({ status }: { status: string }) {
   if (status === "live")
@@ -36,8 +37,7 @@ function FlagImg({ team, className = "w-8 h-6" }: { team: Team | null; className
 }
 
 function abbr(team: Team | null): string {
-  if (!team) return "TBD";
-  return (team.short_name ?? team.name).slice(0, 3).toUpperCase();
+  return getTeamTLA(team?.name);
 }
 
 export default function MatchCard({ match }: { match: MatchWithTeams }) {
