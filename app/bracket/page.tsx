@@ -12,18 +12,18 @@ function Flag({ team }: { team: Team | null | undefined }) {
   const src = team.flag_url ?? getFlagUrl(team.name);
   if (!src) return null;
   // eslint-disable-next-line @next/next/no-img-element
-  return <img src={src} alt={team.name} className="w-4 h-3 object-cover rounded-sm border border-gray-700 shrink-0" />;
+  return <img src={src} alt={team.name} className="w-5 h-3.5 object-cover rounded-sm border border-gray-700 shrink-0" />;
 }
 
 function TeamRow({ team, score }: { team: Team | null | undefined; score: number | null }) {
   return (
     <div className="flex items-center gap-1.5 min-w-0">
       <Flag team={team} />
-      <span className={`text-[10px] font-medium truncate leading-tight ${team ? "text-white" : "text-gray-600"}`}>
+      <span className={`text-xs font-medium truncate leading-tight ${team ? "text-white" : "text-gray-600"}`}>
         {team?.short_name ?? team?.name ?? "TBD"}
       </span>
       {score !== null && (
-        <span className="ml-auto text-[10px] font-bold text-white shrink-0 pl-1">{score}</span>
+        <span className="ml-auto text-xs font-bold text-white shrink-0 pl-1">{score}</span>
       )}
     </div>
   );
@@ -32,20 +32,20 @@ function TeamRow({ team, score }: { team: Team | null | undefined; score: number
 function MatchCard({ match, highlight }: { match: MatchWithTeams | undefined; highlight?: boolean }) {
   const hasScore = match && match.home_score !== null;
   return (
-    <div className={`w-28 rounded-md border text-[10px] shrink-0 overflow-hidden
+    <div className={`w-36 rounded-md border shrink-0 overflow-hidden
       ${match ? "bg-gray-900/50 border-white/10" : "bg-gray-900/30 border-gray-800/40"}
       ${highlight ? "ring-1 ring-amber-500/60" : ""}`}>
       {match ? (
-        <div className="px-2 py-1 flex flex-col gap-px">
+        <div className="px-2.5 py-1.5 flex flex-col gap-0.5">
           <TeamRow team={match.home_team} score={hasScore ? match.home_score : null} />
           <div className="border-t border-gray-800" />
           <TeamRow team={match.away_team} score={hasScore ? match.away_score : null} />
         </div>
       ) : (
-        <div className="px-2 py-1 flex flex-col gap-px">
-          <span className="text-gray-700 text-[9px]">TBD</span>
+        <div className="px-2.5 py-1.5 flex flex-col gap-0.5">
+          <span className="text-gray-700 text-[10px]">TBD</span>
           <div className="border-t border-gray-800" />
-          <span className="text-gray-700 text-[9px]">TBD</span>
+          <span className="text-gray-700 text-[10px]">TBD</span>
         </div>
       )}
     </div>
@@ -57,7 +57,7 @@ function MatchCard({ match, highlight }: { match: MatchWithTeams | undefined; hi
 // A column of N matches, each given an equal flex-1 vertical slot so spacing doubles each round
 function RoundCol({ matches }: { matches: (MatchWithTeams | undefined)[] }) {
   return (
-    <div className="flex flex-col shrink-0 w-28">
+    <div className="flex flex-col shrink-0 w-36">
       {matches.map((m, i) => (
         <div key={i} className="flex-1 flex items-center">
           <MatchCard match={m} />
@@ -110,12 +110,12 @@ function CenterCol({ final: finalMatch, third }: {
   third: MatchWithTeams | undefined;
 }) {
   return (
-    <div className="flex flex-col items-center shrink-0 w-36">
+    <div className="flex flex-col items-center shrink-0 w-44">
       {/* Top half — pushes Final card to the vertical center */}
       <div className="flex-1 flex flex-col items-center justify-end pb-2 gap-1 min-h-0">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src="/world-cup-trophy.png" alt="Trophy" className="flex-1 w-full object-contain opacity-95 min-h-0" />
-        <span className="text-[9px] text-amber-400 font-bold uppercase tracking-widest shrink-0">Final</span>
+        <span className="text-[10px] text-amber-400 font-bold uppercase tracking-widest shrink-0">Final</span>
       </div>
       {/* Final card — centered at Y=50% of bracket height */}
       <div className="shrink-0">
@@ -123,7 +123,7 @@ function CenterCol({ final: finalMatch, third }: {
       </div>
       {/* Bottom half */}
       <div className="flex-1 flex flex-col items-center justify-start pt-3 gap-1">
-        <span className="text-[9px] text-gray-500 font-semibold uppercase">3rd Place</span>
+        <span className="text-[10px] text-gray-500 font-semibold uppercase">3rd Place</span>
         <MatchCard match={third} />
       </div>
     </div>
@@ -165,24 +165,25 @@ export default async function BracketPage() {
   const sfR  = sf[1];
 
   // Desktop label row widths must exactly match the bracket column widths below
+  // RoundCol = w-36 (144px), Conn = w-4 (16px), HorizLine = w-6 (24px), CenterCol = w-44 (176px)
   const labelCols = [
-    { w: 112, label: "Round of 32"   },
+    { w: 144, label: "Round of 32"   },
     { w: 16,  label: ""              },
-    { w: 112, label: "Round of 16"   },
+    { w: 144, label: "Round of 16"   },
     { w: 16,  label: ""              },
-    { w: 112, label: "Quarterfinals" },
+    { w: 144, label: "Quarterfinals" },
     { w: 16,  label: ""              },
-    { w: 112, label: "Semifinals"    },
+    { w: 144, label: "Semifinals"    },
     { w: 24,  label: ""              },
-    { w: 144, label: "Final"         },
+    { w: 176, label: "Final"         },
     { w: 24,  label: ""              },
-    { w: 112, label: "Semifinals"    },
+    { w: 144, label: "Semifinals"    },
     { w: 16,  label: ""              },
-    { w: 112, label: "Quarterfinals" },
+    { w: 144, label: "Quarterfinals" },
     { w: 16,  label: ""              },
-    { w: 112, label: "Round of 16"   },
+    { w: 144, label: "Round of 16"   },
     { w: 16,  label: ""              },
-    { w: 112, label: "Round of 32"   },
+    { w: 144, label: "Round of 32"   },
   ];
 
   const totalW = labelCols.reduce((s, c) => s + c.w, 0);
@@ -193,14 +194,15 @@ export default async function BracketPage() {
 
       {/* ── Desktop full bracket tree ──────────────────────────────────── */}
       <div className="hidden md:block overflow-x-auto pb-6">
+        <div className="mx-auto" style={{ width: totalW }}>
 
         {/* Round labels */}
-        <div className="flex mb-2" style={{ minWidth: totalW }}>
+        <div className="flex mb-2">
           {labelCols.map((col, i) => (
             <div
               key={i}
               style={{ width: col.w, flexShrink: 0 }}
-              className="text-center text-[9px] text-amber-400/60 font-semibold uppercase tracking-wider truncate"
+              className="text-center text-[10px] text-amber-400/60 font-semibold uppercase tracking-wider truncate"
             >
               {col.label}
             </div>
@@ -208,7 +210,7 @@ export default async function BracketPage() {
         </div>
 
         {/* Bracket tree — all columns share the same height via items-stretch */}
-        <div className="flex items-stretch" style={{ minWidth: totalW, height: 640 }}>
+        <div className="flex items-stretch" style={{ height: 680 }}>
 
           {/* Left bracket: R32 → R16 → QF → SF */}
           <RoundCol matches={r32L} />
@@ -237,6 +239,7 @@ export default async function BracketPage() {
           <RightConn arms={4} />
           <RoundCol matches={r32R} />
 
+        </div>
         </div>
       </div>
 

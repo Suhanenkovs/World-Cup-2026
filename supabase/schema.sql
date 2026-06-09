@@ -59,6 +59,21 @@ create table public.predictions (
   unique(user_id, match_id)
 );
 
+-- ── Prediction Audit Log ─────────────────────────────────
+create table public.prediction_logs (
+  id         uuid primary key default uuid_generate_v4(),
+  user_id    uuid not null references public.profiles(id) on delete cascade,
+  match_id   uuid not null references public.matches(id) on delete cascade,
+  pred_home  int not null,
+  pred_away  int not null,
+  logged_at  timestamptz default now()
+);
+
+alter table public.prediction_logs enable row level security;
+-- Users can append their own log entries; no updates or deletes allowed
+create policy "logs_insert_own" on public.prediction_logs for insert with check (auth.uid() = user_id);
+-- Admins read via service role (no select policy needed for anon/authenticated)
+
 -- ── Bonus Questions ───────────────────────────────────────
 create table public.bonus_questions (
   id             uuid primary key default uuid_generate_v4(),

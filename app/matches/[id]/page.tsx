@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { notFound } from "next/navigation";
 import { formatInTimeZone } from "date-fns-tz";
-import { STAGE_LABELS, type Stage } from "@/lib/constants";
+import { STAGE_LABELS, POINTS_EXACT_SCORE, POINTS_GOAL_DIFF, type Stage } from "@/lib/constants";
 import type { MatchWithTeams } from "@/types/database";
 import { getFlagUrl } from "@/lib/teamFlags";
 import Link from "next/link";
@@ -123,28 +123,63 @@ export default async function MatchDetailPage({
       {(!predictions || predictions.length === 0) ? (
         <p className="text-gray-500 text-sm">No predictions submitted yet.</p>
       ) : (
-        <div className="flex flex-col gap-2">
-          {predictions.map((p) => {
-            const user = p.user as { username: string; name?: string | null } | null;
-            return (
-              <div
-                key={p.id}
-                className="bg-gray-900/50 backdrop-blur-sm border border-white/10 rounded-xl px-4 py-3 flex items-center justify-between"
-              >
-                <span className="font-medium text-white">{user?.name || user?.username || "—"}</span>
-                <div className="flex items-center gap-4">
-                  <span className="font-mono text-gray-300">
-                    {p.pred_home} – {p.pred_away}
-                  </span>
-                  {p.points_earned !== null && (
-                    <span className={`text-sm font-bold ${p.points_earned > 0 ? "text-emerald-400" : "text-gray-500"}`}>
-                      {p.points_earned > 0 ? `+${p.points_earned}` : "0"} pts
-                    </span>
-                  )}
-                </div>
-              </div>
-            );
-          })}
+        <div className="bg-gray-900/50 backdrop-blur-sm border border-white/10 rounded-xl overflow-hidden">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-white/5 text-[10px] text-gray-500 uppercase tracking-wider">
+                <th className="px-4 py-2.5 text-left">Player</th>
+                <th className="px-4 py-2.5 text-center">Pick</th>
+                {hasScore && <th className="px-4 py-2.5 text-center">Result</th>}
+                <th className="px-4 py-2.5 text-right">Pts</th>
+              </tr>
+            </thead>
+            <tbody>
+              {predictions.map((p, i) => {
+                const u = p.user as { id?: string; username: string; name?: string | null } | null;
+                const pts = p.points_earned;
+                const stage = m.stage as Stage;
+                const ql = hasScore && pts !== null && pts !== undefined
+                  ? pts >= POINTS_EXACT_SCORE[stage] ? { text: "Exact", cls: "text-yellow-400" }
+                  : pts >= POINTS_GOAL_DIFF[stage]   ? { text: "GD ✓",  cls: "text-emerald-400" }
+                  : pts > 0                           ? { text: "Result ✓", cls: "text-blue-400" }
+                  : { text: "Wrong", cls: "text-gray-600" }
+                  : null;
+                return (
+                  <tr key={p.id} className={`border-b border-white/5 last:border-0 ${i % 2 !== 0 ? "bg-white/[0.02]" : ""}`}>
+                    <td className="px-4 py-2.5">
+                      <Link href={`/players/${p.user_id}`} className="font-medium text-white hover:text-amber-400 transition-colors">
+                        {u?.name || u?.username || "—"}
+                      </Link>
+                    </td>
+                    <td className="px-4 py-2.5 text-center font-mono text-gray-300">
+                      {p.pred_home}–{p.pred_away}
+                    </td>
+                    {hasScore && (
+                      <td className="px-4 py-2.5 text-center font-mono font-bold text-white">
+                        {m.home_score}–{m.away_score}
+                      </td>
+                    )}
+                    <td className="px-4 py-2.5 text-right">
+                      {ql ? (
+                        <div className="flex flex-col items-end gap-0.5">
+                          <span className={`text-[10px] font-semibold ${ql.cls}`}>{ql.text}</span>
+                          <span className={`font-mono font-bold ${pts! > 0 ? "text-emerald-400" : "text-gray-600"}`}>
+                            {pts! > 0 ? `+${pts}` : "0"}
+                          </span>
+                        </div>
+                      ) : pts !== null && pts !== undefined ? (
+                        <span className={`font-mono font-bold ${pts > 0 ? "text-emerald-400" : "text-gray-500"}`}>
+                          {pts > 0 ? `+${pts}` : "0"}
+                        </span>
+                      ) : (
+                        <span className="text-gray-600 text-xs">—</span>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
         </div>
       )}
     </div>

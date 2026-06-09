@@ -5,7 +5,7 @@ import { formatInTimeZone } from "date-fns-tz";
 import { createClient } from "@/lib/supabase/client";
 import type { MatchWithTeams, Prediction, Team } from "@/types/database";
 import type { Stage } from "@/lib/constants";
-import { POINTS_CORRECT_RESULT, POINTS_EXACT_SCORE, STAGE_LABELS } from "@/lib/constants";
+import { POINTS_CORRECT_RESULT, POINTS_EXACT_SCORE, POINTS_GOAL_DIFF, STAGE_LABELS } from "@/lib/constants";
 import { getFlagUrl } from "@/lib/teamFlags";
 
 function Flag({ team }: { team: Team | null }) {
@@ -84,6 +84,10 @@ function MatchRow({ match, pred, stage, userId, isPaid }: MatchRowProps) {
         { onConflict: "user_id,match_id" }
       );
       if (err) { setError(err.message); return; }
+      // Append-only audit log — never updated or deleted
+      await supabase.from("prediction_logs").insert(
+        { user_id: userId, match_id: match.id, pred_home: h, pred_away: a }
+      );
       setSaved(true);
       setTimeout(() => setSaved(false), 2000);
     });
@@ -110,41 +114,56 @@ function MatchRow({ match, pred, stage, userId, isPaid }: MatchRowProps) {
           <Flag team={match.home_team} />
         </div>
 
-        <div className="flex items-center gap-1">
-          <input
-            type="text"
-            inputMode="numeric"
-            pattern="[0-9]*"
-            maxLength={2}
-            autoComplete="off"
-            name={`home-score-${match.id}`}
-            value={home}
-            onChange={handleChange(setHome)}
-            disabled={isLocked}
-            placeholder=""
-            className="w-10 text-center bg-gray-800 border border-gray-700 rounded-md py-1 text-white text-sm
-              placeholder-gray-600 disabled:opacity-40 disabled:cursor-not-allowed
-              focus:outline-none focus:border-emerald-500 [appearance:textfield]
-              [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-          />
-          <span className="text-gray-600">–</span>
-          <input
-            type="text"
-            inputMode="numeric"
-            pattern="[0-9]*"
-            maxLength={2}
-            autoComplete="off"
-            name={`away-score-${match.id}`}
-            value={away}
-            onChange={handleChange(setAway)}
-            disabled={isLocked}
-            placeholder=""
-            className="w-10 text-center bg-gray-800 border border-gray-700 rounded-md py-1 text-white text-sm
-              placeholder-gray-600 disabled:opacity-40 disabled:cursor-not-allowed
-              focus:outline-none focus:border-emerald-500 [appearance:textfield]
-              [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-          />
-        </div>
+        {isFinished && match.home_score !== null ? (
+          <div className="flex flex-col items-center gap-0.5 px-2">
+            <span className="font-mono font-bold text-white text-xl leading-none">
+              {match.home_score}–{match.away_score}
+            </span>
+            {pred ? (
+              <span className="text-[10px] text-gray-500 font-mono">
+                pick: {pred.pred_home}–{pred.pred_away}
+              </span>
+            ) : (
+              <span className="text-[10px] text-gray-700">no pick</span>
+            )}
+          </div>
+        ) : (
+          <div className="flex items-center gap-1">
+            <input
+              type="text"
+              inputMode="numeric"
+              pattern="[0-9]*"
+              maxLength={2}
+              autoComplete="off"
+              name={`home-score-${match.id}`}
+              value={home}
+              onChange={handleChange(setHome)}
+              disabled={isLocked}
+              placeholder=""
+              className="w-10 text-center bg-gray-800 border border-gray-700 rounded-md py-1 text-white text-sm
+                placeholder-gray-600 disabled:opacity-40 disabled:cursor-not-allowed
+                focus:outline-none focus:border-emerald-500 [appearance:textfield]
+                [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+            />
+            <span className="text-gray-600">–</span>
+            <input
+              type="text"
+              inputMode="numeric"
+              pattern="[0-9]*"
+              maxLength={2}
+              autoComplete="off"
+              name={`away-score-${match.id}`}
+              value={away}
+              onChange={handleChange(setAway)}
+              disabled={isLocked}
+              placeholder=""
+              className="w-10 text-center bg-gray-800 border border-gray-700 rounded-md py-1 text-white text-sm
+                placeholder-gray-600 disabled:opacity-40 disabled:cursor-not-allowed
+                focus:outline-none focus:border-emerald-500 [appearance:textfield]
+                [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+            />
+          </div>
+        )}
 
         <div className="flex items-center gap-1.5 min-w-0">
           <Flag team={match.away_team} />
@@ -153,32 +172,34 @@ function MatchRow({ match, pred, stage, userId, isPaid }: MatchRowProps) {
         </div>
       </div>
 
-      {/* Points / save */}
-      <div className="flex items-center gap-2 shrink-0 justify-end">
-        {isFinished && match.home_score !== null && (
-          <span className="text-xs text-gray-500 font-mono">
-            {match.home_score}–{match.away_score}
-          </span>
-        )}
-
-        {pts !== null && pts !== undefined ? (
-          <span className={`text-sm font-bold min-w-[50px] text-right
-            ${pts >= POINTS_EXACT_SCORE[stage] ? "text-yellow-400" :
-              pts >= POINTS_CORRECT_RESULT[stage] ? "text-emerald-400" : "text-gray-500"}`}>
-            {pts > 0 ? `+${pts}` : "0"} pts
-          </span>
-        ) : (
-          !isLocked && (
-            <button
-              onClick={handleSave}
-              disabled={isPending || isLocked}
-              className="text-xs bg-emerald-700 hover:bg-emerald-600 disabled:opacity-40 text-white
-                px-3 py-1.5 rounded-lg transition-colors"
-            >
-              {isPending ? "Saving…" : saved ? "Saved ✓" : "Save"}
-            </button>
-          )
-        )}
+      {/* Points / save / quality */}
+      <div className="flex items-center gap-2 shrink-0 justify-end min-w-[70px]">
+        {isFinished && pts !== null && pts !== undefined ? (
+          <div className="flex flex-col items-end gap-0.5">
+            <span className={`text-[10px] font-semibold
+              ${pts >= POINTS_EXACT_SCORE[stage] ? "text-yellow-400" :
+                pts >= POINTS_GOAL_DIFF[stage]   ? "text-emerald-400" :
+                pts > 0                           ? "text-blue-400" : "text-gray-600"}`}>
+              {pts >= POINTS_EXACT_SCORE[stage] ? "Exact" :
+               pts >= POINTS_GOAL_DIFF[stage]   ? "GD ✓" :
+               pts > 0                           ? "Result ✓" : "Wrong"}
+            </span>
+            <span className={`font-mono font-bold text-sm ${pts > 0 ? "text-emerald-400" : "text-gray-600"}`}>
+              {pts > 0 ? `+${pts}` : "0"} pts
+            </span>
+          </div>
+        ) : isFinished && pred ? (
+          <span className="text-xs text-gray-600">pending</span>
+        ) : !isLocked ? (
+          <button
+            onClick={handleSave}
+            disabled={isPending}
+            className="text-xs bg-emerald-700 hover:bg-emerald-600 disabled:opacity-40 text-white
+              px-3 py-1.5 rounded-lg transition-colors"
+          >
+            {isPending ? "Saving…" : saved ? "Saved ✓" : "Save"}
+          </button>
+        ) : null}
       </div>
 
       {error && <p className="text-red-400 text-xs w-full">{error}</p>}

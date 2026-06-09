@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { getPrizeAmounts } from "@/lib/scoring";
+import Link from "next/link";
 
 export const revalidate = 60;
 
@@ -19,6 +20,22 @@ export default async function LeaderboardPage() {
   const prizes = config
     ? getPrizeAmounts(paidCount, entryFee, config.winner_pct, config.second_pct, config.third_pct)
     : null;
+
+  // Sort: total desc, then match_points as tiebreaker
+  const sorted = [...(rows ?? [])].sort((a, b) =>
+    b.total_points - a.total_points || b.match_points - a.match_points
+  );
+
+  const tournamentStarted = sorted.some((r) => r.total_points > 0);
+
+  // Standard competition ranking: same (total, match) → same position
+  function getPos(row: (typeof sorted)[0]) {
+    return sorted.filter(
+      (r) =>
+        r.total_points > row.total_points ||
+        (r.total_points === row.total_points && r.match_points > row.match_points)
+    ).length + 1;
+  }
 
   return (
     <div className="max-w-3xl mx-auto px-4 py-8">
@@ -53,9 +70,10 @@ export default async function LeaderboardPage() {
             </tr>
           </thead>
           <tbody>
-            {(rows ?? []).map((row, i) => {
+            {sorted.map((row) => {
               const isMe = row.id === user.id;
-              const medal = i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : null;
+              const pos = tournamentStarted ? getPos(row) : null;
+              const medal = pos === 1 ? "🥇" : pos === 2 ? "🥈" : pos === 3 ? "🥉" : null;
 
               return (
                 <tr
@@ -64,13 +82,13 @@ export default async function LeaderboardPage() {
                     ${isMe ? "bg-emerald-900/20" : "hover:bg-gray-800/30"}`}
                 >
                   <td className="px-4 py-3 text-gray-500 font-mono">
-                    {medal ?? i + 1}
+                    {pos === null ? "–" : medal ?? pos}
                   </td>
                   <td className="px-4 py-3">
-                    <span className={`font-medium ${isMe ? "text-emerald-400" : "text-white"}`}>
-                      {row.name || row.username}
+                    <Link href={`/players/${row.id}`} className={`font-medium hover:text-amber-400 transition-colors ${isMe ? "text-emerald-400" : "text-white"}`}>
+                      {(row as any).name || row.username}
                       {isMe && <span className="text-xs text-gray-500 ml-1">(you)</span>}
-                    </span>
+                    </Link>
                     {!row.paid && (
                       <span className="ml-2 text-xs text-amber-500">⚠ unpaid</span>
                     )}
@@ -87,6 +105,10 @@ export default async function LeaderboardPage() {
           </tbody>
         </table>
       </div>
+
+      <p className="text-xs text-gray-600 mt-3 text-right">
+        Tiebreaker: equal total points → ranked by match points. True tie if both are equal.
+      </p>
     </div>
   );
 }
