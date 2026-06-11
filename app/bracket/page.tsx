@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import type { MatchWithTeams, Team } from "@/types/database";
 import { getFlagUrl } from "@/lib/teamFlags";
+import Link from "next/link";
 
 export const revalidate = 60;
 
@@ -243,11 +244,64 @@ export default async function BracketPage() {
         </div>
       </div>
 
-      {/* ── Mobile: not available ─────────────────────────────────────── */}
-      <div className="md:hidden flex flex-col items-center gap-4 py-16 text-center">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/world-cup-trophy.png" alt="Trophy" className="w-16 h-16 object-contain opacity-60" />
-        <p className="text-gray-400 text-sm">Open on a larger screen to view the bracket.</p>
+      {/* ── Mobile: round-by-round cards ─────────────────────────────── */}
+      <div className="md:hidden flex flex-col gap-4">
+        {[
+          { label: "Round of 32",   matches: r32 },
+          { label: "Round of 16",   matches: r16 },
+          { label: "Quarterfinals", matches: qf  },
+          { label: "Semifinals",    matches: sf  },
+          { label: "Final",         matches: finalMatch ? [finalMatch] : [] },
+          { label: "Third Place",   matches: third      ? [third]      : [] },
+        ].filter(({ matches }) => matches.length > 0).map(({ label, matches }) => (
+          <div key={label} className="bg-gray-900/50 backdrop-blur-sm border border-white/10 rounded-xl overflow-hidden">
+            <div className="px-4 py-2 border-b border-white/5">
+              <span className="text-xs font-bold uppercase tracking-widest text-amber-400">{label}</span>
+            </div>
+            <div className="divide-y divide-white/5">
+              {(matches as (MatchWithTeams | undefined)[]).map((m, i) => {
+                if (!m) return null;
+                const hasScore = m.home_score !== null;
+                const isLive   = m.status === "live";
+                const homeSrc  = m.home_team?.flag_url ?? (m.home_team ? getFlagUrl(m.home_team.name) : null);
+                const awaySrc  = m.away_team?.flag_url ?? (m.away_team ? getFlagUrl(m.away_team.name) : null);
+                return (
+                  <Link key={i} href={`/matches/${m.id}`}
+                    className="flex items-center gap-2 px-4 py-2.5 hover:bg-white/5 transition-colors">
+                    {/* Home */}
+                    <div className="flex items-center gap-1.5 flex-1 min-w-0 justify-end">
+                      <span className="text-white text-xs truncate">{m.home_team?.name ?? "TBD"}</span>
+                      {homeSrc
+                        // eslint-disable-next-line @next/next/no-img-element
+                        ? <img src={homeSrc} alt="" className="w-6 h-4 object-cover rounded-sm border border-gray-700 shrink-0" />
+                        : <span className="w-6 h-4 bg-gray-700 rounded-sm shrink-0 inline-block" />}
+                    </div>
+                    {/* Score / vs */}
+                    <div className="text-center shrink-0 w-12">
+                      {hasScore ? (
+                        <span className={`font-mono font-bold text-sm ${isLive ? "text-emerald-400" : "text-white"}`}>
+                          {m.home_score}–{m.away_score}
+                        </span>
+                      ) : isLive ? (
+                        <span className="text-[9px] bg-red-600 text-white px-1 py-0.5 rounded-full animate-pulse">LIVE</span>
+                      ) : (
+                        <span className="text-gray-600 text-xs">vs</span>
+                      )}
+                    </div>
+                    {/* Away */}
+                    <div className="flex items-center gap-1.5 flex-1 min-w-0">
+                      {awaySrc
+                        // eslint-disable-next-line @next/next/no-img-element
+                        ? <img src={awaySrc} alt="" className="w-6 h-4 object-cover rounded-sm border border-gray-700 shrink-0" />
+                        : <span className="w-6 h-4 bg-gray-700 rounded-sm shrink-0 inline-block" />}
+                      <span className="text-white text-xs truncate">{m.away_team?.name ?? "TBD"}</span>
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );
