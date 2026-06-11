@@ -154,7 +154,7 @@ interface Props {
 }
 
 export default function BonusForm({ questions, answerMap, userId, isLocked: isLockedProp, teamNames }: Props) {
-  const [isLocked, setIsLocked] = useState(isLockedProp || new Date() >= BONUS_LOCK_AT);
+  const [isLocked, setIsLocked] = useState(isLockedProp);
   const [answers, setAnswers] = useState<Record<string, string>>(
     Object.fromEntries(Object.entries(answerMap).map(([qid, a]) => [qid, a.answer]))
   );
@@ -163,12 +163,11 @@ export default function BonusForm({ questions, answerMap, userId, isLocked: isLo
   const [isPending, startTransition] = useTransition();
 
   useEffect(() => {
-    if (isLocked) return;
+    if (new Date() >= BONUS_LOCK_AT) { setIsLocked(true); return; }
     const ms = BONUS_LOCK_AT.getTime() - Date.now();
-    if (ms <= 0) { setIsLocked(true); return; }
     const t = setTimeout(() => setIsLocked(true), ms);
     return () => clearTimeout(t);
-  }, [isLocked]);
+  }, []);
   const [players, setPlayers] = useState<{ name: string; team: string; position: string }[]>([]);
 
   // Fetch players if any question needs them
