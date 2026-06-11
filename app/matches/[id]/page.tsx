@@ -6,6 +6,7 @@ import { STAGE_LABELS, POINTS_EXACT_SCORE, POINTS_GOAL_DIFF, type Stage } from "
 import type { MatchWithTeams } from "@/types/database";
 import { getFlagUrl } from "@/lib/teamFlags";
 import Link from "next/link";
+import AutoRefresh from "@/components/AutoRefresh";
 
 export const revalidate = 30;
 
@@ -40,6 +41,7 @@ export default async function MatchDetailPage({
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-8">
+      {m.status === "live" && <AutoRefresh />}
       <BackButton />
       <div className="text-xs text-emerald-400 uppercase tracking-wider mb-2">
         {STAGE_LABELS[m.stage as Stage]}
