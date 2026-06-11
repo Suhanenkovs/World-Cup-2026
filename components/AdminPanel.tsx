@@ -28,9 +28,10 @@ interface Props {
   players: Profile[];
   questions: BonusQuestion[];
   prizeConfig: PrizeConfig;
+  tab: "participants" | "bonus";
 }
 
-export default function AdminPanel({ players, questions, prizeConfig }: Props) {
+export default function AdminPanel({ players, questions, prizeConfig, tab }: Props) {
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteName, setInviteName] = useState("");
   const [inviteStatus, setInviteStatus] = useState("");
@@ -262,6 +263,7 @@ export default function AdminPanel({ players, questions, prizeConfig }: Props) {
 
   return (
     <div className="flex flex-col gap-8">
+      {tab === "participants" && <>
       {/* Prize pool config */}
       <div className="bg-gray-900 border border-gray-800 rounded-xl p-5">
         <h2 className="text-lg font-semibold text-white mb-4">Prize Pool</h2>
@@ -430,6 +432,22 @@ export default function AdminPanel({ players, questions, prizeConfig }: Props) {
         </div>
       </div>
 
+      {/* Manual sync */}
+      <div className="bg-gray-900 border border-gray-800 rounded-xl p-5">
+        <h2 className="text-lg font-semibold text-white mb-2">Score Sync</h2>
+        <p className="text-sm text-gray-400 mb-3">
+          Automatically runs every 5 minutes via cron-job.org during match windows. Trigger manually here if needed.
+        </p>
+        <button
+          onClick={triggerSync}
+          disabled={isPending}
+          className="bg-gray-700 hover:bg-gray-600 disabled:opacity-40 text-white text-sm px-4 py-2 rounded-lg transition-colors"
+        >
+          {isPending ? "Syncing…" : "Sync scores now"}
+        </button>
+      </div>
+      </>}
+      {tab === "bonus" && <>
       {/* Bonus Questions management */}
       <div className="bg-gray-900 border border-gray-800 rounded-xl p-5">
         <div className="flex items-center justify-between mb-4">
@@ -581,20 +599,7 @@ export default function AdminPanel({ players, questions, prizeConfig }: Props) {
         </div>
       </div>
 
-      {/* Manual sync */}
-      <div className="bg-gray-900 border border-gray-800 rounded-xl p-5">
-        <h2 className="text-lg font-semibold text-white mb-2">Score Sync</h2>
-        <p className="text-sm text-gray-400 mb-3">
-          Automatically runs every 5 minutes via Vercel Cron during match windows. Trigger manually here if needed.
-        </p>
-        <button
-          onClick={triggerSync}
-          disabled={isPending}
-          className="bg-gray-700 hover:bg-gray-600 disabled:opacity-40 text-white text-sm px-4 py-2 rounded-lg transition-colors"
-        >
-          {isPending ? "Syncing…" : "Sync scores now"}
-        </button>
-      </div>
+      </>}
     </div>
   );
 }

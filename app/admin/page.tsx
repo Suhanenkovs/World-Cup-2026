@@ -1,7 +1,6 @@
 import { createClient, createServiceClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
-import AdminPanel from "@/components/AdminPanel";
-import MatchResultsPanel from "@/components/MatchResultsPanel";
+import AdminTabs from "@/components/AdminTabs";
 import type { MatchWithTeams } from "@/types/database";
 
 export const revalidate = 0;
@@ -34,16 +33,12 @@ export default async function AdminPage() {
   return (
     <div className="max-w-4xl mx-auto px-4 py-8">
       <h1 className="text-2xl font-bold text-white mb-6">Admin Panel</h1>
-      <AdminPanel
-        players={playersWithEmail}
+      <AdminTabs
+        players={playersWithEmail as any}
         questions={questions ?? []}
         prizeConfig={config ?? { entry_fee: 20, winner_pct: 60, second_pct: 30, third_pct: 10, fourth_pct: 0, fifth_pct: 0, id: 1 }}
+        matches={(matches ?? []) as MatchWithTeams[]}
       />
-
-      <div className="mt-10">
-        <h2 className="text-lg font-bold text-white mb-4">Match Results</h2>
-        <MatchResultsPanel matches={(matches ?? []) as MatchWithTeams[]} />
-      </div>
     </div>
   );
 }
