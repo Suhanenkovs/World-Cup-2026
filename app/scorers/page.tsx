@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { getFlagUrl } from "@/lib/teamFlags";
+import AutoRefresh from "@/components/AutoRefresh";
 
 export const revalidate = 60;
 
@@ -35,6 +36,7 @@ export default async function ScorersPage() {
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-8">
+      <AutoRefresh />
       <h1 className="text-2xl font-bold text-white mb-6">Tournament Top Scorers</h1>
 
       {scorers.length === 0 ? (
