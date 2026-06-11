@@ -2,7 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { getFlagUrl } from "@/lib/teamFlags";
 
-export const revalidate = 300;
+export const revalidate = 60;
 
 interface FDScorer {
   player: { id: number; name: string; nationality: string | null };
