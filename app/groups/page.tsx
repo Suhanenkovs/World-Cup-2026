@@ -157,16 +157,17 @@ function GroupFixtures({ matches }: { matches: MatchWithTeams[] }) {
               }
             </div>
 
-            <div className="text-center text-xs shrink-0 w-8">
+            <div className="text-center shrink-0 w-14 flex flex-col items-center gap-0.5">
+              {isLive && (
+                <span className="text-[8px] bg-red-600 text-white px-1 py-0.5 rounded-full animate-pulse leading-none">LIVE</span>
+              )}
               {hasScore ? (
-                <span className={`font-mono font-bold ${isLive ? "text-emerald-400" : "text-white"}`}>
+                <span className={`font-mono font-bold text-xs ${isLive ? "text-emerald-400" : "text-white"}`}>
                   {m.home_score}–{m.away_score}
                 </span>
-              ) : isLive ? (
-                <span className="text-[9px] bg-red-600 text-white px-1 py-0.5 rounded-full animate-pulse">LIVE</span>
-              ) : (
-                <span className="text-gray-600">vs</span>
-              )}
+              ) : !isLive ? (
+                <span className="text-gray-600 text-xs">vs</span>
+              ) : null}
             </div>
 
             <div className="flex items-center gap-1 shrink-0">
