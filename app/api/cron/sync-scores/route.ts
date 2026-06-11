@@ -118,6 +118,11 @@ export async function GET(request: NextRequest) {
     const homeScore = fd.score?.fullTime?.home ?? null;
     const awayScore = fd.score?.fullTime?.away ?? null;
 
+    // Never regress: don't downgrade status or wipe a score the API momentarily lost
+    const STATUS_RANK: Record<string, number> = { scheduled: 0, live: 1, finished: 2 };
+    if ((STATUS_RANK[status] ?? 0) < (STATUS_RANK[db.status] ?? 0)) continue;
+    if (homeScore === null && db.home_score !== null) continue;
+
     const changed =
       db.status     !== status    ||
       db.home_score !== homeScore ||
