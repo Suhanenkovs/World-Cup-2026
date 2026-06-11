@@ -4,6 +4,7 @@ import { getTeamTLA } from "@/lib/teamTLA";
 import { formatInTimeZone } from "date-fns-tz";
 import Link from "next/link";
 import type { MatchWithTeams } from "@/types/database";
+import AutoRefresh from "@/components/AutoRefresh";
 
 export const dynamic = "force-dynamic";
 
@@ -200,6 +201,7 @@ export default async function GroupsPage() {
     .order("scheduled_at", { ascending: true });
 
   const allMatches = (matches ?? []) as MatchWithTeams[];
+  const hasLive = allMatches.some((m) => m.status === "live");
 
   // Bucket by group letter
   const matchesByGroup = new Map<string, MatchWithTeams[]>();
@@ -214,6 +216,7 @@ export default async function GroupsPage() {
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-8">
+      {hasLive && <AutoRefresh />}
       <h1 className="text-2xl font-bold text-white mb-6">Group Stage</h1>
 
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
