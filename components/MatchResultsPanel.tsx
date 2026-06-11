@@ -140,7 +140,6 @@ export default function MatchResultsPanel({ matches }: Props) {
                         className={inputCls}
                         value={s.homeScore}
                         onChange={(e) => update(m.id, { homeScore: e.target.value })}
-                        placeholder="–"
                       />
                       <span className="text-gray-500 font-mono text-sm">:</span>
                       <input
@@ -150,7 +149,6 @@ export default function MatchResultsPanel({ matches }: Props) {
                         className={inputCls}
                         value={s.awayScore}
                         onChange={(e) => update(m.id, { awayScore: e.target.value })}
-                        placeholder="–"
                       />
                     </div>
 
@@ -215,7 +213,7 @@ export default function MatchResultsPanel({ matches }: Props) {
                             className={inputCls}
                             value={s.homeScoreEt}
                             onChange={(e) => update(m.id, { homeScoreEt: e.target.value })}
-                            placeholder="–"
+
                           />
                           <span className="text-gray-500 font-mono">:</span>
                           <input
@@ -225,7 +223,7 @@ export default function MatchResultsPanel({ matches }: Props) {
                             className={inputCls}
                             value={s.awayScoreEt}
                             onChange={(e) => update(m.id, { awayScoreEt: e.target.value })}
-                            placeholder="–"
+
                           />
                         </div>
                       ) : null}
@@ -239,7 +237,7 @@ export default function MatchResultsPanel({ matches }: Props) {
                             className={inputCls}
                             value={s.penHome}
                             onChange={(e) => update(m.id, { penHome: e.target.value })}
-                            placeholder="–"
+
                           />
                           <span className="text-gray-500 font-mono">:</span>
                           <input
@@ -249,7 +247,7 @@ export default function MatchResultsPanel({ matches }: Props) {
                             className={inputCls}
                             value={s.penAway}
                             onChange={(e) => update(m.id, { penAway: e.target.value })}
-                            placeholder="–"
+
                           />
                         </div>
                       )}
