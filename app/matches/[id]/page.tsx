@@ -81,16 +81,34 @@ export default async function MatchDetailPage({
           {/* Score */}
           <div className="text-center px-4">
             {hasScore ? (
-              <div className="font-mono font-extrabold text-3xl text-white">
-                {m.home_score} – {m.away_score}
-              </div>
+              <>
+                {/* Final display score: ET score if available, else regulation */}
+                <div className="font-mono font-extrabold text-3xl text-white">
+                  {m.home_score_et ?? m.home_score} – {m.away_score_et ?? m.away_score}
+                </div>
+                {m.score_duration === "EXTRA_TIME" && (
+                  <div className="text-[10px] text-amber-400 font-semibold mt-0.5">AET</div>
+                )}
+                {m.score_duration === "PENALTY_SHOOTOUT" && (
+                  <>
+                    <div className="text-[10px] text-amber-400 font-semibold mt-0.5">AET</div>
+                    <div className="text-[10px] text-gray-400 mt-0.5">
+                      ({m.penalties_home} – {m.penalties_away} pens)
+                    </div>
+                  </>
+                )}
+                {/* Regulation score note for knockout ET/PSO matches */}
+                {m.score_duration && m.score_duration !== "REGULAR" && (
+                  <div className="text-[10px] text-gray-600 mt-1">90 min: {m.home_score}–{m.away_score}</div>
+                )}
+              </>
             ) : (
               <div className="font-mono text-gray-500 text-2xl">vs</div>
             )}
             {m.status === "live" && (
               <span className="text-xs bg-red-600 text-white px-2 py-0.5 rounded-full animate-pulse mt-2 inline-block">LIVE</span>
             )}
-            {m.status === "finished" && (
+            {m.status === "finished" && !hasScore && (
               <span className="text-xs text-gray-500 mt-2 inline-block">Full Time</span>
             )}
           </div>

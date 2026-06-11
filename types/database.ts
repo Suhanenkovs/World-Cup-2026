@@ -20,8 +20,13 @@ export interface MatchRow {
   group_letter: string | null;
   home_team_id: string | null;
   away_team_id: string | null;
-  home_score: number | null;
+  home_score: number | null;   // regulation time (90 min) — used for prediction scoring
   away_score: number | null;
+  home_score_et: number | null;  // cumulative score after extra time
+  away_score_et: number | null;
+  penalties_home: number | null; // penalty shootout goals only
+  penalties_away: number | null;
+  score_duration: "REGULAR" | "EXTRA_TIME" | "PENALTY_SHOOTOUT" | null;
   scheduled_at: string;
   venue: string | null;
   status: "scheduled" | "live" | "finished";

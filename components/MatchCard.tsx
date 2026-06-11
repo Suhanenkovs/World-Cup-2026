@@ -6,8 +6,6 @@ import { getFlagUrl } from "@/lib/teamFlags";
 import { getTeamTLA } from "@/lib/teamTLA";
 
 function StatusBadge({ status }: { status: string }) {
-  if (status === "live")
-    return <span className="text-xs bg-red-600 text-white px-2 py-0.5 rounded-full animate-pulse shrink-0">LIVE</span>;
   if (status === "finished")
     return <span className="text-xs bg-gray-700 text-gray-300 px-2 py-0.5 rounded-full shrink-0">FT</span>;
   return null;
@@ -79,11 +77,24 @@ export default function MatchCard({ match }: { match: MatchWithTeams }) {
         </div>
 
         {/* Score / vs */}
-        <div className="text-center w-10 sm:w-16 shrink-0">
+        <div className="text-center w-10 sm:w-20 shrink-0 flex flex-col items-center gap-0.5">
           {hasScore ? (
-            <span className={`font-mono font-bold text-base sm:text-lg ${isFinished ? "text-white" : "text-emerald-400"}`}>
-              {match.home_score}–{match.away_score}
-            </span>
+            <>
+              <span className={`font-mono font-bold text-base sm:text-lg ${isFinished ? "text-white" : "text-emerald-400"}`}>
+                {match.home_score_et ?? match.home_score}–{match.away_score_et ?? match.away_score}
+              </span>
+              {match.score_duration === "EXTRA_TIME" && (
+                <span className="text-[9px] text-amber-400 font-semibold leading-none">AET</span>
+              )}
+              {match.score_duration === "PENALTY_SHOOTOUT" && (
+                <>
+                  <span className="text-[9px] text-amber-400 font-semibold leading-none">AET</span>
+                  <span className="text-[9px] text-gray-400 leading-none">({match.penalties_home}–{match.penalties_away} pens)</span>
+                </>
+              )}
+            </>
+          ) : match.status === "live" ? (
+            <span className="text-[9px] bg-red-600 text-white px-1 py-0.5 rounded-full animate-pulse">LIVE</span>
           ) : (
             <span className="text-gray-500 text-sm font-mono">vs</span>
           )}

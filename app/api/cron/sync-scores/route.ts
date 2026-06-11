@@ -56,7 +56,13 @@ function teamsMatch(fdName: string, dbName: string): boolean {
 // ── football-data.org types ───────────────────────────────────────────────────
 
 interface FDTeam  { name: string; shortName: string; tla: string }
-interface FDScore { fullTime: { home: number | null; away: number | null } }
+interface FDScoreVal { home: number | null; away: number | null }
+interface FDScore {
+  fullTime:  FDScoreVal;
+  extraTime: FDScoreVal | null;
+  penalties: FDScoreVal | null;
+  duration:  string | null;
+}
 interface FDMatch { status: string; homeTeam: FDTeam; awayTeam: FDTeam; score: FDScore }
 
 // ── Cron handler ──────────────────────────────────────────────────────────────
@@ -114,9 +120,14 @@ export async function GET(request: NextRequest) {
 
     if (!fd) continue;
 
-    const apiStatus  = mapStatus(fd.status);
-    const homeScore  = fd.score?.fullTime?.home ?? null;
-    const awayScore  = fd.score?.fullTime?.away ?? null;
+    const apiStatus    = mapStatus(fd.status);
+    const homeScore    = fd.score?.fullTime?.home  ?? null;  // regulation (90 min)
+    const awayScore    = fd.score?.fullTime?.away  ?? null;
+    const homeScoreEt  = fd.score?.extraTime?.home ?? null;
+    const awayScoreEt  = fd.score?.extraTime?.away ?? null;
+    const penHome      = fd.score?.penalties?.home ?? null;
+    const penAway      = fd.score?.penalties?.away ?? null;
+    const duration     = fd.score?.duration ?? null;
 
     // If kickoff has passed but API still says scheduled (TIMED), treat as live
     const kickoffPassed = new Date(db.scheduled_at) <= now;
@@ -127,11 +138,18 @@ export async function GET(request: NextRequest) {
     if ((STATUS_RANK[status] ?? 0) < (STATUS_RANK[db.status] ?? 0)) continue;
 
     if (status === "finished" && homeScore !== null && awayScore !== null) {
-      // Write final score and status together
+      // Write regulation score + ET/pen scores + status together
       if (db.status !== "finished" || db.home_score !== homeScore || db.away_score !== awayScore) {
         await supabase
           .from("matches")
-          .update({ status, home_score: homeScore, away_score: awayScore, updated_at: now.toISOString() })
+          .update({
+            status,
+            home_score: homeScore, away_score: awayScore,
+            home_score_et: homeScoreEt, away_score_et: awayScoreEt,
+            penalties_home: penHome,   penalties_away: penAway,
+            score_duration: duration,
+            updated_at: now.toISOString(),
+          })
           .eq("id", db.id);
         synced++;
       }
