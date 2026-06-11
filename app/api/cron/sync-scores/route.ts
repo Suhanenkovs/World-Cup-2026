@@ -122,20 +122,24 @@ export async function GET(request: NextRequest) {
     const kickoffPassed = new Date(db.scheduled_at) <= now;
     const status = (apiStatus === "scheduled" && kickoffPassed) ? "live" : apiStatus;
 
-    // Never regress: don't downgrade status or wipe a score the API momentarily lost
+    // Never regress status
     const STATUS_RANK: Record<string, number> = { scheduled: 0, live: 1, finished: 2 };
     if ((STATUS_RANK[status] ?? 0) < (STATUS_RANK[db.status] ?? 0)) continue;
-    if (homeScore === null && db.home_score !== null) continue;
 
-    const changed =
-      db.status     !== status    ||
-      db.home_score !== homeScore ||
-      db.away_score !== awayScore;
-
-    if (changed) {
+    if (status === "finished" && homeScore !== null && awayScore !== null) {
+      // Write final score and status together
+      if (db.status !== "finished" || db.home_score !== homeScore || db.away_score !== awayScore) {
+        await supabase
+          .from("matches")
+          .update({ status, home_score: homeScore, away_score: awayScore, updated_at: now.toISOString() })
+          .eq("id", db.id);
+        synced++;
+      }
+    } else if (status !== db.status) {
+      // Only update status — never touch the score during a live match
       await supabase
         .from("matches")
-        .update({ status, home_score: homeScore, away_score: awayScore, updated_at: now.toISOString() })
+        .update({ status, updated_at: now.toISOString() })
         .eq("id", db.id);
       synced++;
     }
