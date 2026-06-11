@@ -61,12 +61,12 @@ export default async function LeaderboardPage() {
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-gray-800 text-xs text-gray-500 uppercase tracking-wide">
-              <th className="px-4 py-3 text-left w-10">#</th>
-              <th className="px-4 py-3 text-left">Player</th>
-              <th className="px-4 py-3 text-right">Match</th>
-              <th className="px-4 py-3 text-right">Bonus</th>
-              <th className="px-4 py-3 text-right font-semibold text-gray-300">Total</th>
-              <th className="px-4 py-3 text-right hidden sm:table-cell">Correct</th>
+              <th className="px-2 sm:px-4 py-3 text-left w-8">#</th>
+              <th className="px-2 sm:px-4 py-3 text-left">Player</th>
+              <th className="px-2 sm:px-4 py-3 text-right">Match</th>
+              <th className="px-2 sm:px-4 py-3 text-right hidden sm:table-cell">Bonus</th>
+              <th className="px-2 sm:px-4 py-3 text-right font-semibold text-gray-300">Total</th>
+              <th className="px-2 sm:px-4 py-3 text-right hidden sm:table-cell">Correct</th>
             </tr>
           </thead>
           <tbody>
@@ -81,10 +81,10 @@ export default async function LeaderboardPage() {
                   className={`border-b border-gray-800/60 last:border-0 transition-colors
                     ${isMe ? "bg-emerald-900/20" : "hover:bg-gray-800/30"}`}
                 >
-                  <td className="px-4 py-3 text-gray-500 font-mono">
+                  <td className="px-2 sm:px-4 py-3 text-gray-500 font-mono">
                     {pos === null ? "–" : medal ?? pos}
                   </td>
-                  <td className="px-4 py-3">
+                  <td className="px-2 sm:px-4 py-3">
                     <Link href={`/players/${row.id}`} className={`font-medium hover:text-amber-400 transition-colors ${isMe ? "text-emerald-400" : "text-white"}`}>
                       {(row as any).name || row.username}
                       {isMe && <span className="text-xs text-gray-500 ml-1">(you)</span>}
@@ -93,9 +93,9 @@ export default async function LeaderboardPage() {
                       <span className="ml-2 text-xs text-amber-500">⚠ unpaid</span>
                     )}
                   </td>
-                  <td className="px-4 py-3 text-right text-gray-300 font-mono">{row.match_points}</td>
-                  <td className="px-4 py-3 text-right text-amber-400 font-mono">{row.bonus_points}</td>
-                  <td className="px-4 py-3 text-right font-bold text-white font-mono">{row.total_points}</td>
+                  <td className="px-2 sm:px-4 py-3 text-right text-gray-300 font-mono">{row.match_points}</td>
+                  <td className="px-2 sm:px-4 py-3 text-right text-amber-400 font-mono hidden sm:table-cell">{row.bonus_points}</td>
+                  <td className="px-2 sm:px-4 py-3 text-right font-bold text-white font-mono">{row.total_points}</td>
                   <td className="px-4 py-3 text-right text-gray-400 hidden sm:table-cell">
                     {row.correct_predictions}
                   </td>
