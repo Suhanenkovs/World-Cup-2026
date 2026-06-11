@@ -63,9 +63,9 @@ export default async function LeaderboardPage() {
             <tr className="border-b border-gray-800 text-xs text-gray-500 uppercase tracking-wide">
               <th className="px-2 sm:px-4 py-3 text-left w-8">#</th>
               <th className="px-2 sm:px-4 py-3 text-left">Player</th>
-              <th className="px-2 sm:px-4 py-3 text-right">Match</th>
-              <th className="px-2 sm:px-4 py-3 text-right hidden sm:table-cell">Bonus</th>
-              <th className="px-2 sm:px-4 py-3 text-right font-semibold text-gray-300">Total</th>
+              <th className="px-2 sm:px-4 py-3 text-right">M<span className="hidden sm:inline">atch</span></th>
+              <th className="px-2 sm:px-4 py-3 text-right">B<span className="hidden sm:inline">onus</span></th>
+              <th className="px-2 sm:px-4 py-3 text-right font-semibold text-gray-300">T<span className="hidden sm:inline">otal</span></th>
               <th className="px-2 sm:px-4 py-3 text-right hidden sm:table-cell">Correct</th>
             </tr>
           </thead>
@@ -94,7 +94,7 @@ export default async function LeaderboardPage() {
                     )}
                   </td>
                   <td className="px-2 sm:px-4 py-3 text-right text-gray-300 font-mono">{row.match_points}</td>
-                  <td className="px-2 sm:px-4 py-3 text-right text-amber-400 font-mono hidden sm:table-cell">{row.bonus_points}</td>
+                  <td className="px-2 sm:px-4 py-3 text-right text-amber-400 font-mono">{row.bonus_points}</td>
                   <td className="px-2 sm:px-4 py-3 text-right font-bold text-white font-mono">{row.total_points}</td>
                   <td className="px-4 py-3 text-right text-gray-400 hidden sm:table-cell">
                     {row.correct_predictions}
