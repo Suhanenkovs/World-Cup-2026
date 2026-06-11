@@ -66,7 +66,6 @@ export default async function LeaderboardPage() {
               <th className="px-2 sm:px-4 py-3 text-right"><span className="sm:hidden">Mch</span><span className="hidden sm:inline">Match</span></th>
               <th className="px-2 sm:px-4 py-3 text-right"><span className="sm:hidden">Bon</span><span className="hidden sm:inline">Bonus</span></th>
               <th className="px-2 sm:px-4 py-3 text-right font-semibold text-gray-300"><span className="sm:hidden">Tot</span><span className="hidden sm:inline">Total</span></th>
-              <th className="px-2 sm:px-4 py-3 text-right hidden sm:table-cell">Correct</th>
             </tr>
           </thead>
           <tbody>
@@ -96,9 +95,6 @@ export default async function LeaderboardPage() {
                   <td className="px-2 sm:px-4 py-3 text-right text-gray-300 font-mono">{row.match_points}</td>
                   <td className="px-2 sm:px-4 py-3 text-right text-amber-400 font-mono">{row.bonus_points}</td>
                   <td className="px-2 sm:px-4 py-3 text-right font-bold text-white font-mono">{row.total_points}</td>
-                  <td className="px-4 py-3 text-right text-gray-400 hidden sm:table-cell">
-                    {row.correct_predictions}
-                  </td>
                 </tr>
               );
             })}
