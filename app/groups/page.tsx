@@ -7,13 +7,13 @@ import type { MatchWithTeams } from "@/types/database";
 
 export const revalidate = 60;
 
-// ── football-data.org types ───────────────────────────────────────────────────
+// ── Standings computed from DB finished matches only ──────────────────────────
 
-interface FDTeam { id: number; name: string; shortName: string; tla: string; crest: string }
-interface FDTableRow {
-  position: number;
-  team: FDTeam;
-  playedGames: number;
+interface StandingRow {
+  teamId: string;
+  teamName: string;
+  apiId: string | null;
+  played: number;
   won: number;
   draw: number;
   lost: number;
@@ -22,47 +22,53 @@ interface FDTableRow {
   goalDifference: number;
   points: number;
 }
-interface FDGroup { group: string; table: FDTableRow[]; type: string }
 
-async function fetchStandings(): Promise<FDGroup[]> {
-  try {
-    const res = await fetch("https://api.football-data.org/v4/competitions/WC/standings", {
-      headers: { "X-Auth-Token": process.env.FOOTBALL_DATA_API_KEY! },
-      next: { revalidate: 60 },
-    });
-    if (!res.ok) return [];
-    const json = await res.json();
-    return (json.standings as FDGroup[]).filter((s: { type: string }) => s.type === "TOTAL");
-  } catch {
-    return [];
+function computeStandings(groupMatches: MatchWithTeams[]): StandingRow[] {
+  const rows = new Map<string, StandingRow>();
+
+  // Initialise every team in this group (from all matches, not just finished)
+  for (const m of groupMatches) {
+    for (const team of [m.home_team, m.away_team]) {
+      if (team && !rows.has(team.id)) {
+        rows.set(team.id, {
+          teamId: team.id,
+          teamName: team.name,
+          apiId: team.api_id,
+          played: 0, won: 0, draw: 0, lost: 0,
+          goalsFor: 0, goalsAgainst: 0, goalDifference: 0, points: 0,
+        });
+      }
+    }
   }
+
+  // Only count finished matches
+  for (const m of groupMatches) {
+    if (m.status !== "finished" || m.home_score === null || m.away_score === null) continue;
+    if (!m.home_team || !m.away_team) continue;
+
+    const home = rows.get(m.home_team.id)!;
+    const away = rows.get(m.away_team.id)!;
+
+    home.played++; away.played++;
+    home.goalsFor     += m.home_score; home.goalsAgainst += m.away_score;
+    away.goalsFor     += m.away_score; away.goalsAgainst += m.home_score;
+
+    if (m.home_score > m.away_score)      { home.won++; home.points += 3; away.lost++; }
+    else if (m.home_score < m.away_score) { away.won++; away.points += 3; home.lost++; }
+    else                                  { home.draw++; home.points++; away.draw++; away.points++; }
+
+    home.goalDifference = home.goalsFor - home.goalsAgainst;
+    away.goalDifference = away.goalsFor - away.goalsAgainst;
+  }
+
+  return [...rows.values()].sort((a, b) =>
+    b.points - a.points || b.goalDifference - a.goalDifference || b.goalsFor - a.goalsFor
+  );
 }
 
 // ── Sub-components ────────────────────────────────────────────────────────────
 
-// fd.org uses different name variants — map to our DB english names
-const FD_TO_DB: Record<string, string> = {
-  "Korea Republic":                   "South Korea",
-  "Republic of Korea":                "South Korea",
-  "Türkiye":                          "Turkey",
-  "Côte d'Ivoire":                    "Ivory Coast",
-  "Cote d'Ivoire":                    "Ivory Coast",
-  "Cabo Verde":                       "Cape Verde",
-  "Cape Verde Islands":               "Cape Verde",
-  "IR Iran":                          "Iran",
-  "United States":                    "USA",
-  "United States of America":         "USA",
-  "Congo DR":                         "DR Congo",
-  "Democratic Republic of the Congo": "DR Congo",
-  "Bosnia and Herzegovina":           "Bosnia & Herzegovina",
-  "Bosnia-Herzegovina":               "Bosnia & Herzegovina",
-};
-
-function fdNameToDb(fdName: string): string {
-  return FD_TO_DB[fdName] ?? fdName;
-}
-
-function StandingsTable({ rows, teamApiIds }: { rows: FDTableRow[]; teamApiIds: Map<string, string> }) {
+function StandingsTable({ rows }: { rows: StandingRow[] }) {
   return (
     <table className="w-full text-xs">
       <thead>
@@ -79,38 +85,36 @@ function StandingsTable({ rows, teamApiIds }: { rows: FDTableRow[]; teamApiIds: 
       </thead>
       <tbody>
         {rows.map((row, i) => {
-          const flagSrc = getFlagUrl(row.team.name) ?? getFlagUrl(row.team.shortName);
+          const flagSrc = getFlagUrl(row.teamName);
           const qualifies = i < 2;
-          const dbName = fdNameToDb(row.team.name);
-          const apiId = teamApiIds.get(dbName.toLowerCase());
           return (
             <tr
-              key={row.team.tla}
+              key={row.teamId}
               className={`border-b border-gray-800/50 ${qualifies ? "bg-emerald-950/20" : ""}`}
             >
-              <td className="py-1.5 pl-1 text-gray-500">{row.position}</td>
+              <td className="py-1.5 pl-1 text-gray-500">{i + 1}</td>
               <td className="py-1.5">
-                {apiId ? (
-                  <Link href={`/teams/${apiId}`} className="flex items-center gap-1.5 hover:text-amber-400 transition-colors group">
+                {row.apiId ? (
+                  <Link href={`/teams/${row.apiId}`} className="flex items-center gap-1.5 hover:text-amber-400 transition-colors group">
                     {flagSrc
                       // eslint-disable-next-line @next/next/no-img-element
-                      ? <img src={flagSrc} alt={row.team.name} className="w-5 h-3.5 object-cover rounded-sm border border-gray-700 shrink-0" />
+                      ? <img src={flagSrc} alt={row.teamName} className="w-5 h-3.5 object-cover rounded-sm border border-gray-700 shrink-0" />
                       : <span className="w-5 h-3.5 rounded-sm bg-gray-700 shrink-0 inline-block" />
                     }
-                    <span className="text-white font-medium truncate group-hover:text-amber-400 transition-colors">{row.team.shortName}</span>
+                    <span className="text-white font-medium truncate group-hover:text-amber-400 transition-colors">{row.teamName}</span>
                   </Link>
                 ) : (
                   <div className="flex items-center gap-1.5">
                     {flagSrc
                       // eslint-disable-next-line @next/next/no-img-element
-                      ? <img src={flagSrc} alt={row.team.name} className="w-5 h-3.5 object-cover rounded-sm border border-gray-700 shrink-0" />
+                      ? <img src={flagSrc} alt={row.teamName} className="w-5 h-3.5 object-cover rounded-sm border border-gray-700 shrink-0" />
                       : <span className="w-5 h-3.5 rounded-sm bg-gray-700 shrink-0 inline-block" />
                     }
-                    <span className="text-white font-medium truncate">{row.team.shortName}</span>
+                    <span className="text-white font-medium truncate">{row.teamName}</span>
                   </div>
                 )}
               </td>
-              <td className="py-1.5 text-center text-gray-400">{row.playedGames}</td>
+              <td className="py-1.5 text-center text-gray-400">{row.played}</td>
               <td className="py-1.5 text-center text-gray-400">{row.won}</td>
               <td className="py-1.5 text-center text-gray-400">{row.draw}</td>
               <td className="py-1.5 text-center text-gray-400">{row.lost}</td>
@@ -185,68 +189,46 @@ function GroupFixtures({ matches }: { matches: MatchWithTeams[] }) {
 export default async function GroupsPage() {
   const supabase = await createClient();
 
-  const [fdGroups, { data: matches }, { data: dbTeams }] = await Promise.all([
-    fetchStandings(),
-    supabase
-      .from("matches")
-      .select("*, home_team:home_team_id(*), away_team:away_team_id(*)")
-      .eq("stage", "group")
-      .order("scheduled_at", { ascending: true }),
-    supabase.from("teams").select("name, api_id"),
-  ]);
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) { const { redirect } = await import("next/navigation"); redirect("/login"); }
 
-  // name (lowercase) → api_id for standings links
-  const teamApiIds = new Map<string, string>();
-  for (const t of dbTeams ?? []) {
-    teamApiIds.set(t.name.toLowerCase(), t.api_id);
-  }
+  const { data: matches } = await supabase
+    .from("matches")
+    .select("*, home_team:home_team_id(*), away_team:away_team_id(*)")
+    .eq("stage", "group")
+    .order("scheduled_at", { ascending: true });
 
-  // Bucket DB matches by group letter
+  const allMatches = (matches ?? []) as MatchWithTeams[];
+
+  // Bucket by group letter
   const matchesByGroup = new Map<string, MatchWithTeams[]>();
-  for (const m of (matches ?? []) as MatchWithTeams[]) {
+  for (const m of allMatches) {
     if (!m.group_letter) continue;
     const list = matchesByGroup.get(m.group_letter) ?? [];
     list.push(m);
     matchesByGroup.set(m.group_letter, list);
   }
 
-  // Sort groups A–L
-  const groups = fdGroups.sort((a, b) => a.group.localeCompare(b.group));
-  const groupLetters = groups.map((g) => g.group.replace(/^GROUP[_ ]?/i, ""));
-
-  // Fallback: if FD standings not available yet, show groups from DB only
-  const dbOnlyLetters = [...matchesByGroup.keys()]
-    .filter((l) => !groupLetters.includes(l))
-    .sort();
+  const groupLetters = [...matchesByGroup.keys()].sort();
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-8">
       <h1 className="text-2xl font-bold text-white mb-6">Group Stage</h1>
 
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
-        {groups.map((g) => {
-          const letter = g.group.replace(/^GROUP[_ ]?/i, "");
+        {groupLetters.map((letter) => {
+          const groupMatches = matchesByGroup.get(letter)!;
+          const standings = computeStandings(groupMatches);
           return (
-            <div key={g.group} className="bg-gray-900/50 backdrop-blur-sm border border-white/10 rounded-xl p-4">
+            <div key={letter} className="bg-gray-900/50 backdrop-blur-sm border border-white/10 rounded-xl p-4">
               <h2 className="text-xs font-bold uppercase tracking-widest text-emerald-400 mb-3">
                 Group {letter}
               </h2>
-              <StandingsTable rows={g.table} teamApiIds={teamApiIds} />
-              <GroupFixtures matches={matchesByGroup.get(letter) ?? []} />
+              <StandingsTable rows={standings} />
+              <GroupFixtures matches={groupMatches} />
             </div>
           );
         })}
-
-        {/* Fallback cards when standings API not yet populated */}
-        {dbOnlyLetters.map((letter) => (
-          <div key={letter} className="bg-gray-900/50 backdrop-blur-sm border border-white/10 rounded-xl p-4">
-            <h2 className="text-xs font-bold uppercase tracking-widest text-emerald-400 mb-3">
-              Group {letter}
-            </h2>
-            <p className="text-xs text-gray-600 mb-2">Standings available at tournament start</p>
-            <GroupFixtures matches={matchesByGroup.get(letter) ?? []} />
-          </div>
-        ))}
       </div>
     </div>
   );
