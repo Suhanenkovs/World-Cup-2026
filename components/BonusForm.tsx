@@ -3,6 +3,7 @@
 import { useState, useTransition, useEffect, useRef } from "react";
 import { createClient } from "@/lib/supabase/client";
 import type { BonusQuestion, BonusAnswer } from "@/types/database";
+import { BONUS_LOCK_AT } from "@/lib/constants";
 
 // ── Input type ────────────────────────────────────────────────────────────────
 
@@ -152,13 +153,22 @@ interface Props {
   teamNames: string[];
 }
 
-export default function BonusForm({ questions, answerMap, userId, isLocked, teamNames }: Props) {
+export default function BonusForm({ questions, answerMap, userId, isLocked: isLockedProp, teamNames }: Props) {
+  const [isLocked, setIsLocked] = useState(isLockedProp || new Date() >= BONUS_LOCK_AT);
   const [answers, setAnswers] = useState<Record<string, string>>(
     Object.fromEntries(Object.entries(answerMap).map(([qid, a]) => [qid, a.answer]))
   );
   const [saved, setSaved] = useState<Record<string, boolean>>({});
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isPending, startTransition] = useTransition();
+
+  useEffect(() => {
+    if (isLocked) return;
+    const ms = BONUS_LOCK_AT.getTime() - Date.now();
+    if (ms <= 0) { setIsLocked(true); return; }
+    const t = setTimeout(() => setIsLocked(true), ms);
+    return () => clearTimeout(t);
+  }, [isLocked]);
   const [players, setPlayers] = useState<{ name: string; team: string; position: string }[]>([]);
 
   // Fetch players if any question needs them
