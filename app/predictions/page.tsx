@@ -98,6 +98,9 @@ export default async function PredictionsPage() {
             </div>
           ))}
         </div>
+        <p className="mt-3 pt-3 border-t border-gray-800 text-gray-600">
+          Knockout stage scores are judged after <span className="text-gray-400">90 minutes only</span> (regulation time). Extra time and penalties do not count.
+        </p>
       </div>
     </div>
   );
