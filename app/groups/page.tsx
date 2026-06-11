@@ -5,7 +5,7 @@ import { formatInTimeZone } from "date-fns-tz";
 import Link from "next/link";
 import type { MatchWithTeams } from "@/types/database";
 
-export const revalidate = 60;
+export const dynamic = "force-dynamic";
 
 // ── Standings computed from DB finished matches only ──────────────────────────
 
