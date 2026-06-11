@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { getPrizeAmounts } from "@/lib/scoring";
 import Link from "next/link";
 
-export const revalidate = 60;
+export const dynamic = "force-dynamic";
 
 export default async function LeaderboardPage() {
   const supabase = await createClient();
