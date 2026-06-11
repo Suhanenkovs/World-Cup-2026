@@ -114,9 +114,13 @@ export async function GET(request: NextRequest) {
 
     if (!fd) continue;
 
-    const status    = mapStatus(fd.status);
-    const homeScore = fd.score?.fullTime?.home ?? null;
-    const awayScore = fd.score?.fullTime?.away ?? null;
+    const apiStatus  = mapStatus(fd.status);
+    const homeScore  = fd.score?.fullTime?.home ?? null;
+    const awayScore  = fd.score?.fullTime?.away ?? null;
+
+    // If kickoff has passed but API still says scheduled (TIMED), treat as live
+    const kickoffPassed = new Date(db.scheduled_at) <= now;
+    const status = (apiStatus === "scheduled" && kickoffPassed) ? "live" : apiStatus;
 
     // Never regress: don't downgrade status or wipe a score the API momentarily lost
     const STATUS_RANK: Record<string, number> = { scheduled: 0, live: 1, finished: 2 };
