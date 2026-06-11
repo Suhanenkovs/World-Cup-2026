@@ -11,6 +11,8 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [resetSent, setResetSent] = useState(false);
+  const [resetLoading, setResetLoading] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -29,6 +31,18 @@ export default function LoginPage() {
 
   function handleKeyDown(e: React.KeyboardEvent) {
     if (e.key === "Enter") handleSubmit(e as unknown as React.FormEvent);
+  }
+
+  async function handleForgotPassword() {
+    if (!email) { setError("Enter your email address first, then click Forgot password."); return; }
+    setError("");
+    setResetLoading(true);
+    const supabase = createClient();
+    await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback?type=recovery`,
+    });
+    setResetLoading(false);
+    setResetSent(true);
   }
 
   return (
@@ -79,6 +93,21 @@ export default function LoginPage() {
           >
             {loading ? "Signing in…" : "Sign in"}
           </button>
+
+          <div className="text-center">
+            {resetSent ? (
+              <p className="text-emerald-400 text-xs">Reset link sent — check your inbox.</p>
+            ) : (
+              <button
+                type="button"
+                onClick={handleForgotPassword}
+                disabled={resetLoading}
+                className="text-xs text-gray-500 hover:text-gray-300 transition-colors disabled:opacity-50"
+              >
+                {resetLoading ? "Sending…" : "Forgot password?"}
+              </button>
+            )}
+          </div>
         </form>
 
         <p className="text-center text-sm text-gray-500 mt-4">
