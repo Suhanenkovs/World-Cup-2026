@@ -16,7 +16,7 @@ async function fetchScorers(): Promise<FDScorer[]> {
   try {
     const res = await fetch("https://api.football-data.org/v4/competitions/WC/scorers?limit=100", {
       headers: { "X-Auth-Token": process.env.FOOTBALL_DATA_API_KEY! },
-      next: { revalidate: 300 },
+      next: { revalidate: 60 },
     });
     if (!res.ok) return [];
     const json = await res.json();
