@@ -63,9 +63,9 @@ export default async function LeaderboardPage() {
             <tr className="border-b border-gray-800 text-xs text-gray-500 uppercase tracking-wide">
               <th className="px-2 sm:px-4 py-3 text-left w-8">#</th>
               <th className="px-2 sm:px-4 py-3 text-left">Player</th>
-              <th className="px-2 sm:px-4 py-3 text-right">M<span className="hidden sm:inline">atch</span></th>
-              <th className="px-2 sm:px-4 py-3 text-right">B<span className="hidden sm:inline">onus</span></th>
-              <th className="px-2 sm:px-4 py-3 text-right font-semibold text-gray-300">T<span className="hidden sm:inline">otal</span></th>
+              <th className="px-2 sm:px-4 py-3 text-right"><span className="sm:hidden">Mch</span><span className="hidden sm:inline">Match</span></th>
+              <th className="px-2 sm:px-4 py-3 text-right"><span className="sm:hidden">Bon</span><span className="hidden sm:inline">Bonus</span></th>
+              <th className="px-2 sm:px-4 py-3 text-right font-semibold text-gray-300"><span className="sm:hidden">Tot</span><span className="hidden sm:inline">Total</span></th>
               <th className="px-2 sm:px-4 py-3 text-right hidden sm:table-cell">Correct</th>
             </tr>
           </thead>
