@@ -58,7 +58,7 @@ export const POINTS_EXACT_SCORE: Record<Stage, number> = {
 };
 
 // Tournament dates
-export const TOURNAMENT_START = new Date("2026-06-11T19:00:00-04:00"); // first kickoff
+export const TOURNAMENT_START = new Date("2026-06-11T19:00:00Z"); // first kickoff
 export const TOURNAMENT_END = new Date("2026-07-19T18:00:00-04:00");
 
 // Bonus questions lock at first kickoff
