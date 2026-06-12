@@ -1,14 +1,22 @@
 "use client";
 
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 
+function AuthError() {
+  const authError = useSearchParams().get("auth_error");
+  if (!authError) return null;
+  return (
+    <div className="bg-red-900/40 border border-red-700 text-red-300 text-sm rounded-lg px-4 py-3 mb-4">
+      {authError}
+    </div>
+  );
+}
+
 export default function LoginPage() {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const authError = searchParams.get("auth_error");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -43,11 +51,9 @@ export default function LoginPage() {
           <p className="text-gray-400 text-sm mt-1">Sign in to your account</p>
         </div>
 
-        {authError && (
-          <div className="bg-red-900/40 border border-red-700 text-red-300 text-sm rounded-lg px-4 py-3 mb-4">
-            {authError}
-          </div>
-        )}
+        <Suspense>
+          <AuthError />
+        </Suspense>
 
         <form onSubmit={handleSubmit} onKeyDown={handleKeyDown} className="bg-gray-900 rounded-xl border border-gray-800 p-6 flex flex-col gap-4">
           {error && (
