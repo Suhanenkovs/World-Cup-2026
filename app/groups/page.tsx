@@ -145,43 +145,49 @@ function GroupFixtures({ matches }: { matches: MatchWithTeams[] }) {
           <Link
             key={m.id}
             href={`/matches/${m.id}`}
-            className="grid grid-cols-[5rem_1fr_4.5rem_1fr] items-center gap-1 px-2 py-1.5 rounded-lg hover:bg-gray-800/60 transition-colors"
+            className="flex items-center px-2 py-1.5 rounded-lg hover:bg-gray-800/60 transition-colors"
           >
-            {/* Date */}
-            <span className="text-gray-500 text-[10px]">{formatInTimeZone(kickoff, "Europe/Riga", "d MMM HH:mm")}</span>
+            {/* Date — flush left, aligned with table */}
+            <span className="text-gray-500 text-[10px] shrink-0">{formatInTimeZone(kickoff, "Europe/Riga", "d MMM HH:mm")}</span>
 
-            {/* Home — right-aligned, flag closest to center */}
-            <div className="flex items-center justify-end gap-1">
-              <span className="text-white font-mono text-[11px]">{getTeamTLA(m.home_team?.name)}</span>
-              {homeFlagSrc
-                // eslint-disable-next-line @next/next/no-img-element
-                ? <img src={homeFlagSrc} alt="" className="w-5 h-3.5 object-cover rounded-sm border border-gray-700 shrink-0" />
-                : <span className="w-5 h-3.5 bg-gray-700 rounded-sm inline-block shrink-0" />
-              }
-            </div>
+            {/* Spacer pushes match content to the right */}
+            <div className="flex-1" />
 
-            {/* Score / VS */}
-            <div className="flex flex-col items-center gap-0.5">
-              {isLive && (
-                <span className="text-[8px] bg-red-600 text-white px-1 py-0.5 rounded-full animate-pulse leading-none">LIVE</span>
-              )}
-              {hasScore ? (
-                <span className={`font-mono font-bold text-xs ${isLive ? "text-emerald-400" : "text-white"}`}>
-                  {m.home_score}–{m.away_score}
-                </span>
-              ) : !isLive ? (
-                <span className="text-gray-600 text-xs">vs</span>
-              ) : null}
-            </div>
+            {/* Match content — fixed widths keep flags aligned across rows */}
+            <div className="flex items-center gap-2 shrink-0">
+              {/* Home: TLA + flag, right-aligned, fixed width */}
+              <div className="flex items-center justify-end gap-1 w-14">
+                <span className="text-white font-mono text-[11px]">{getTeamTLA(m.home_team?.name)}</span>
+                {homeFlagSrc
+                  // eslint-disable-next-line @next/next/no-img-element
+                  ? <img src={homeFlagSrc} alt="" className="w-5 h-3.5 object-cover rounded-sm border border-gray-700 shrink-0" />
+                  : <span className="w-5 h-3.5 bg-gray-700 rounded-sm inline-block shrink-0" />
+                }
+              </div>
 
-            {/* Away — left-aligned, flag closest to center */}
-            <div className="flex items-center justify-start gap-1">
-              {awayFlagSrc
-                // eslint-disable-next-line @next/next/no-img-element
-                ? <img src={awayFlagSrc} alt="" className="w-5 h-3.5 object-cover rounded-sm border border-gray-700 shrink-0" />
-                : <span className="w-5 h-3.5 bg-gray-700 rounded-sm inline-block shrink-0" />
-              }
-              <span className="text-white font-mono text-[11px]">{getTeamTLA(m.away_team?.name)}</span>
+              {/* Score / VS */}
+              <div className="flex flex-col items-center gap-0.5 w-10">
+                {isLive && (
+                  <span className="text-[8px] bg-red-600 text-white px-1 py-0.5 rounded-full animate-pulse leading-none">LIVE</span>
+                )}
+                {hasScore ? (
+                  <span className={`font-mono font-bold text-xs ${isLive ? "text-emerald-400" : "text-white"}`}>
+                    {m.home_score}–{m.away_score}
+                  </span>
+                ) : !isLive ? (
+                  <span className="text-gray-600 text-xs">vs</span>
+                ) : null}
+              </div>
+
+              {/* Away: flag + TLA, left-aligned, fixed width */}
+              <div className="flex items-center justify-start gap-1 w-14">
+                {awayFlagSrc
+                  // eslint-disable-next-line @next/next/no-img-element
+                  ? <img src={awayFlagSrc} alt="" className="w-5 h-3.5 object-cover rounded-sm border border-gray-700 shrink-0" />
+                  : <span className="w-5 h-3.5 bg-gray-700 rounded-sm inline-block shrink-0" />
+                }
+                <span className="text-white font-mono text-[11px]">{getTeamTLA(m.away_team?.name)}</span>
+              </div>
             </div>
           </Link>
         );
