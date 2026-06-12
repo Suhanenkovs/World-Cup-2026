@@ -162,7 +162,7 @@ export default async function MatchDetailPage({
                 const stage = m.stage as Stage;
                 const ql = hasScore && pts !== null && pts !== undefined
                   ? pts >= POINTS_EXACT_SCORE[stage] ? { text: "Exact", cls: "text-yellow-400" }
-                  : pts >= POINTS_GOAL_DIFF[stage]   ? { text: "GD ✓",  cls: "text-emerald-400" }
+                  : pts >= POINTS_GOAL_DIFF[stage]   ? { text: "Diff ✓", cls: "text-emerald-400" }
                   : pts > 0                           ? { text: "Result ✓", cls: "text-blue-400" }
                   : { text: "Wrong", cls: "text-gray-600" }
                   : null;

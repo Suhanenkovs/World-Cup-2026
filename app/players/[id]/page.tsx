@@ -9,7 +9,7 @@ export const revalidate = 60;
 
 function qualityLabel(pts: number, stage: Stage) {
   if (pts >= POINTS_EXACT_SCORE[stage]) return { text: "Exact", cls: "text-yellow-400" };
-  if (pts >= POINTS_GOAL_DIFF[stage])   return { text: "GD ✓",  cls: "text-emerald-400" };
+  if (pts >= POINTS_GOAL_DIFF[stage])   return { text: "Diff ✓", cls: "text-emerald-400" };
   if (pts > 0)                           return { text: "Result ✓", cls: "text-blue-400" };
   return { text: "Wrong", cls: "text-gray-600" };
 }

@@ -182,7 +182,7 @@ function MatchRow({ match, pred, stage, userId, isPaid }: MatchRowProps) {
                 pts >= POINTS_GOAL_DIFF[stage]   ? "text-emerald-400" :
                 pts > 0                           ? "text-blue-400" : "text-gray-600"}`}>
               {pts >= POINTS_EXACT_SCORE[stage] ? "Exact" :
-               pts >= POINTS_GOAL_DIFF[stage]   ? "GD ✓" :
+               pts >= POINTS_GOAL_DIFF[stage]   ? "Diff ✓" :
                pts > 0                           ? "Result ✓" : "Wrong"}
             </span>
             <span className={`font-mono font-bold text-sm ${pts > 0 ? "text-emerald-400" : "text-gray-600"}`}>
