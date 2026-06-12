@@ -9,8 +9,13 @@ import { useEffect } from "react";
 // this component catches it on any page and sends the user to /reset-password.
 export default function RecoveryRedirect() {
   useEffect(() => {
-    if (window.location.hash.includes("type=recovery")) {
-      window.location.replace("/reset-password" + window.location.hash);
+    const hash = window.location.hash;
+    if (hash.includes("type=recovery")) {
+      window.location.replace("/reset-password" + hash);
+    } else if (hash.includes("error=")) {
+      const params = new URLSearchParams(hash.slice(1));
+      const desc = params.get("error_description") ?? "The link is invalid or has expired.";
+      window.location.replace("/login?auth_error=" + encodeURIComponent(desc));
     }
   }, []);
   return null;

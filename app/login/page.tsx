@@ -2,11 +2,13 @@
 
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 
 export default function LoginPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const authError = searchParams.get("auth_error");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -40,6 +42,12 @@ export default function LoginPage() {
           <h1 className="text-2xl font-bold text-white">FIFA World Cup 2026</h1>
           <p className="text-gray-400 text-sm mt-1">Sign in to your account</p>
         </div>
+
+        {authError && (
+          <div className="bg-red-900/40 border border-red-700 text-red-300 text-sm rounded-lg px-4 py-3 mb-4">
+            {authError}
+          </div>
+        )}
 
         <form onSubmit={handleSubmit} onKeyDown={handleKeyDown} className="bg-gray-900 rounded-xl border border-gray-800 p-6 flex flex-col gap-4">
           {error && (
