@@ -145,7 +145,7 @@ function GroupFixtures({ matches }: { matches: MatchWithTeams[] }) {
           <Link
             key={m.id}
             href={`/matches/${m.id}`}
-            className="grid grid-cols-[5rem_1fr_3rem_1fr] items-center gap-1 px-2 py-1.5 rounded-lg hover:bg-gray-800/60 transition-colors"
+            className="grid grid-cols-[5rem_1fr_4.5rem_1fr] items-center gap-1 px-2 py-1.5 rounded-lg hover:bg-gray-800/60 transition-colors"
           >
             {/* Date */}
             <span className="text-gray-500 text-[10px]">{formatInTimeZone(kickoff, "Europe/Riga", "d MMM HH:mm")}</span>
