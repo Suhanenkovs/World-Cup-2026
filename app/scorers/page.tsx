@@ -11,6 +11,7 @@ interface FDScorer {
   goals: number;
   assists: number | null;
   penalties: number | null;
+  playedMatches: number | null;
 }
 
 async function fetchScorers(): Promise<FDScorer[]> {
@@ -32,7 +33,15 @@ export default async function ScorersPage() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const scorers = await fetchScorers();
+  const raw = await fetchScorers();
+
+  // Sort: goals desc → assists desc → penalties asc → games played asc
+  const scorers = [...raw].sort((a, b) =>
+    b.goals - a.goals ||
+    (b.assists ?? 0) - (a.assists ?? 0) ||
+    (a.penalties ?? 0) - (b.penalties ?? 0) ||
+    (a.playedMatches ?? 0) - (b.playedMatches ?? 0)
+  );
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-8">
@@ -51,17 +60,21 @@ export default async function ScorersPage() {
                 <th className="px-3 py-2.5 text-left w-8">#</th>
                 <th className="px-3 py-2.5 text-left">Player</th>
                 <th className="px-3 py-2.5 text-left hidden sm:table-cell">Team</th>
-                <th className="px-3 py-2.5 text-right w-14">Goals</th>
+                <th className="px-3 py-2.5 text-right w-12">Gls</th>
                 <th className="px-3 py-2.5 text-right w-12">Ast</th>
                 <th className="px-3 py-2.5 text-right w-12 hidden sm:table-cell">Pen</th>
+                <th className="px-3 py-2.5 text-right w-12 hidden sm:table-cell">MP</th>
               </tr>
             </thead>
             <tbody>
               {scorers.map((s, i) => {
                 const flagSrc = getFlagUrl(s.team.name) ?? getFlagUrl(s.team.shortName);
+                // Rank is by goals only — same goals = same rank
+                const rank = scorers.filter((x, j) => j < i && x.goals > s.goals).length + 1;
+                const sameRankAsPrev = i > 0 && scorers[i - 1].goals === s.goals;
                 return (
                   <tr key={s.player.id} className={`border-b border-white/5 last:border-0 ${i % 2 !== 0 ? "bg-white/[0.02]" : ""}`}>
-                    <td className="px-3 py-2.5 text-gray-500 font-mono text-xs">{i + 1}</td>
+                    <td className="px-3 py-2.5 text-gray-500 font-mono text-xs">{sameRankAsPrev ? "" : rank}</td>
                     <td className="px-3 py-2.5">
                       <div className="text-white font-medium">{s.player.name}</div>
                       <div className="flex items-center gap-1.5 mt-0.5 sm:hidden">
@@ -86,6 +99,7 @@ export default async function ScorersPage() {
                     <td className="px-3 py-2.5 text-right font-bold text-emerald-400">{s.goals}</td>
                     <td className="px-3 py-2.5 text-right text-gray-300">{s.assists ?? 0}</td>
                     <td className="px-3 py-2.5 text-right text-gray-500 hidden sm:table-cell">{s.penalties ?? 0}</td>
+                    <td className="px-3 py-2.5 text-right text-gray-500 hidden sm:table-cell">{s.playedMatches ?? 0}</td>
                   </tr>
                 );
               })}
