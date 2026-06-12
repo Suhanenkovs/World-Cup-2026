@@ -145,20 +145,23 @@ function GroupFixtures({ matches }: { matches: MatchWithTeams[] }) {
           <Link
             key={m.id}
             href={`/matches/${m.id}`}
-            className="flex items-center justify-between gap-2 px-2 py-1.5 rounded-lg hover:bg-gray-800/60 transition-colors"
+            className="grid grid-cols-[5rem_1fr_3rem_1fr] items-center gap-1 px-2 py-1.5 rounded-lg hover:bg-gray-800/60 transition-colors"
           >
-            <span className="text-gray-500 text-[10px] shrink-0">{formatInTimeZone(kickoff, "Europe/Riga", "d MMM HH:mm")}</span>
+            {/* Date */}
+            <span className="text-gray-500 text-[10px]">{formatInTimeZone(kickoff, "Europe/Riga", "d MMM HH:mm")}</span>
 
-            <div className="flex items-center gap-1 shrink-0">
+            {/* Home — right-aligned, flag closest to center */}
+            <div className="flex items-center justify-end gap-1">
               <span className="text-white font-mono text-[11px]">{getTeamTLA(m.home_team?.name)}</span>
               {homeFlagSrc
                 // eslint-disable-next-line @next/next/no-img-element
-                ? <img src={homeFlagSrc} alt="" className="w-5 h-3.5 object-cover rounded-sm border border-gray-700" />
-                : <span className="w-5 h-3.5 bg-gray-700 rounded-sm inline-block" />
+                ? <img src={homeFlagSrc} alt="" className="w-5 h-3.5 object-cover rounded-sm border border-gray-700 shrink-0" />
+                : <span className="w-5 h-3.5 bg-gray-700 rounded-sm inline-block shrink-0" />
               }
             </div>
 
-            <div className="text-center shrink-0 w-14 flex flex-col items-center gap-0.5">
+            {/* Score / VS */}
+            <div className="flex flex-col items-center gap-0.5">
               {isLive && (
                 <span className="text-[8px] bg-red-600 text-white px-1 py-0.5 rounded-full animate-pulse leading-none">LIVE</span>
               )}
@@ -171,11 +174,12 @@ function GroupFixtures({ matches }: { matches: MatchWithTeams[] }) {
               ) : null}
             </div>
 
-            <div className="flex items-center gap-1 shrink-0">
+            {/* Away — left-aligned, flag closest to center */}
+            <div className="flex items-center justify-start gap-1">
               {awayFlagSrc
                 // eslint-disable-next-line @next/next/no-img-element
-                ? <img src={awayFlagSrc} alt="" className="w-5 h-3.5 object-cover rounded-sm border border-gray-700" />
-                : <span className="w-5 h-3.5 bg-gray-700 rounded-sm inline-block" />
+                ? <img src={awayFlagSrc} alt="" className="w-5 h-3.5 object-cover rounded-sm border border-gray-700 shrink-0" />
+                : <span className="w-5 h-3.5 bg-gray-700 rounded-sm inline-block shrink-0" />
               }
               <span className="text-white font-mono text-[11px]">{getTeamTLA(m.away_team?.name)}</span>
             </div>
