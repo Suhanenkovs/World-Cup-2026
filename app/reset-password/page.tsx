@@ -14,17 +14,26 @@ export default function ResetPasswordPage() {
 
   useEffect(() => {
     const supabase = createClient();
-    // With PKCE flow the code is exchanged server-side in /auth/callback,
-    // so PASSWORD_RECOVERY never fires on the client. Check for an existing
-    // session instead (set via cookies by the callback route).
+
+    // Token-based flow (Supabase dashboard reset links):
+    // After verify, Supabase redirects with #access_token=...&type=recovery in the hash.
+    // @supabase/ssr browser clients don't auto-process hash tokens, so we do it manually.
+    const hash = window.location.hash.slice(1);
+    if (hash) {
+      const params = new URLSearchParams(hash);
+      const accessToken = params.get("access_token");
+      const refreshToken = params.get("refresh_token");
+      if (accessToken && refreshToken) {
+        supabase.auth.setSession({ access_token: accessToken, refresh_token: refreshToken })
+          .then(({ error }) => { if (!error) setReady(true); });
+        return;
+      }
+    }
+
+    // PKCE flow: session already set via cookies by /auth/callback
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) setReady(true);
     });
-    // Fallback for hash-based recovery flow
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
-      if (event === "PASSWORD_RECOVERY" || event === "SIGNED_IN") setReady(true);
-    });
-    return () => subscription.unsubscribe();
   }, []);
 
   async function handleSubmit(e: React.FormEvent) {
