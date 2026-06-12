@@ -14,10 +14,15 @@ export default function ResetPasswordPage() {
 
   useEffect(() => {
     const supabase = createClient();
-    // Listen for the PASSWORD_RECOVERY event — fires when Supabase
-    // detects recovery tokens in the URL hash on page load.
+    // With PKCE flow the code is exchanged server-side in /auth/callback,
+    // so PASSWORD_RECOVERY never fires on the client. Check for an existing
+    // session instead (set via cookies by the callback route).
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) setReady(true);
+    });
+    // Fallback for hash-based recovery flow
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
-      if (event === "PASSWORD_RECOVERY") setReady(true);
+      if (event === "PASSWORD_RECOVERY" || event === "SIGNED_IN") setReady(true);
     });
     return () => subscription.unsubscribe();
   }, []);
