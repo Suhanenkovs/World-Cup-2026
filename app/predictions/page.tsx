@@ -3,11 +3,17 @@ import { redirect } from "next/navigation";
 import { STAGE_LABELS, STAGE_ORDER, POINTS_CORRECT_RESULT, POINTS_GOAL_DIFF, POINTS_EXACT_SCORE, type Stage } from "@/lib/constants";
 import type { MatchWithTeams, Prediction } from "@/types/database";
 import PredictionsGrid from "@/components/PredictionsGrid";
+import TabSwitcher from "@/components/TabSwitcher";
 import Link from "next/link";
 
 export const revalidate = 0;
 
-export default async function PredictionsPage() {
+export default async function PredictionsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ tab?: string }>;
+}) {
+  const { tab = "upcoming" } = await searchParams;
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
@@ -32,8 +38,17 @@ export default async function PredictionsPage() {
     (myPredictions ?? []).map((p) => [p.match_id, p])
   );
 
+  const allMatches = (matches ?? []) as MatchWithTeams[];
+  const hasLive = allMatches.some((m) => m.status === "live");
+
+  const filtered = allMatches.filter((m) =>
+    tab === "results"
+      ? m.status === "finished" || m.status === "live"
+      : m.status === "scheduled"
+  );
+
   const byStage = new Map<string, MatchWithTeams[]>();
-  for (const m of (matches ?? []) as MatchWithTeams[]) {
+  for (const m of filtered) {
     const list = byStage.get(m.stage) ?? [];
     list.push(m);
     byStage.set(m.stage, list);
@@ -71,20 +86,35 @@ export default async function PredictionsPage() {
         </div>
       )}
 
-      {STAGE_ORDER.filter((s) => byStage.has(s)).map((stage) => (
-        <section key={stage} className="mb-10">
-          <h2 className="text-sm font-semibold uppercase tracking-wider text-emerald-400 mb-3">
-            {STAGE_LABELS[stage as Stage]}
-          </h2>
-          <PredictionsGrid
-            matches={byStage.get(stage)!}
-            predictions={Object.fromEntries(predMap)}
-            stage={stage as Stage}
-            userId={user.id}
-            isPaid={profile?.paid ?? false}
-          />
-        </section>
-      ))}
+      <TabSwitcher
+        tabs={[
+          { key: "upcoming", label: "Upcoming" },
+          { key: "results", label: "Results", live: hasLive },
+        ]}
+        activeTab={tab}
+        basePath="/predictions"
+      />
+
+      {filtered.length === 0 ? (
+        <p className="text-gray-500 text-sm py-8 text-center">
+          {tab === "upcoming" ? "No upcoming matches." : "No results yet."}
+        </p>
+      ) : (
+        STAGE_ORDER.filter((s) => byStage.has(s)).map((stage) => (
+          <section key={stage} className="mb-10">
+            <h2 className="text-sm font-semibold uppercase tracking-wider text-emerald-400 mb-3">
+              {STAGE_LABELS[stage as Stage]}
+            </h2>
+            <PredictionsGrid
+              matches={byStage.get(stage)!}
+              predictions={Object.fromEntries(predMap)}
+              stage={stage as Stage}
+              userId={user.id}
+              isPaid={profile?.paid ?? false}
+            />
+          </section>
+        ))
+      )}
 
       <div className="text-xs text-gray-500 mt-8 bg-gray-900/50 rounded-lg px-4 py-3 border border-gray-800">
         <span className="font-semibold text-gray-300 block mb-2">Scoring</span>
