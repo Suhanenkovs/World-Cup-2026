@@ -4,6 +4,7 @@ import type { MatchWithTeams } from "@/types/database";
 import MatchCard from "@/components/MatchCard";
 import AutoRefresh from "@/components/AutoRefresh";
 import TabSwitcher from "@/components/TabSwitcher";
+import Link from "next/link";
 
 export const revalidate = 60;
 
@@ -22,6 +23,9 @@ export default async function MatchesPage({
 
   const allMatches = (matches ?? []) as MatchWithTeams[];
   const hasLive = allMatches.some((m) => m.status === "live");
+
+  const upcomingCount = allMatches.filter((m) => m.status === "scheduled").length;
+  const resultsCount  = allMatches.filter((m) => m.status === "finished" || m.status === "live").length;
 
   const filtered = allMatches.filter((m) =>
     tab === "results"
@@ -43,21 +47,31 @@ export default async function MatchesPage({
 
       <TabSwitcher
         tabs={[
-          { key: "upcoming", label: "Upcoming" },
-          { key: "results", label: "Results", live: hasLive },
+          { key: "upcoming", label: "Upcoming", count: upcomingCount },
+          { key: "results",  label: "Results",  count: resultsCount, live: hasLive },
         ]}
         activeTab={tab}
         basePath="/matches"
       />
 
       {filtered.length === 0 ? (
-        <p className="text-gray-500 text-sm py-8 text-center">
-          {tab === "upcoming" ? "No upcoming matches." : "No results yet."}
-        </p>
+        <div className="py-16 text-center">
+          <p className="text-gray-400 text-sm">
+            {tab === "upcoming"
+              ? "All matches have been played."
+              : "No results yet — the tournament hasn't started."}
+          </p>
+          <Link
+            href={`/matches?tab=${tab === "upcoming" ? "results" : "upcoming"}`}
+            className="mt-3 inline-block text-sm text-emerald-400 hover:text-emerald-300 transition-colors"
+          >
+            {tab === "upcoming" ? "View results →" : "View upcoming matches →"}
+          </Link>
+        </div>
       ) : (
         STAGE_ORDER.filter((s) => byStage.has(s)).map((stage) => (
           <section key={stage} className="mb-10">
-            <h2 className="text-sm font-semibold uppercase tracking-wider text-emerald-400 mb-3">
+            <h2 className="mb-3 text-[11px] font-bold uppercase tracking-widest text-emerald-400">
               {STAGE_LABELS[stage as Stage]}
             </h2>
             <div className="flex flex-col gap-2">

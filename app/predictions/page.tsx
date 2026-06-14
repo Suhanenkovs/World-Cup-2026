@@ -41,6 +41,9 @@ export default async function PredictionsPage({
   const allMatches = (matches ?? []) as MatchWithTeams[];
   const hasLive = allMatches.some((m) => m.status === "live");
 
+  const upcomingCount = allMatches.filter((m) => m.status === "scheduled").length;
+  const resultsCount  = allMatches.filter((m) => m.status === "finished" || m.status === "live").length;
+
   const filtered = allMatches.filter((m) =>
     tab === "results"
       ? m.status === "finished" || m.status === "live"
@@ -88,21 +91,31 @@ export default async function PredictionsPage({
 
       <TabSwitcher
         tabs={[
-          { key: "upcoming", label: "Upcoming" },
-          { key: "results", label: "Results", live: hasLive },
+          { key: "upcoming", label: "Upcoming", count: upcomingCount },
+          { key: "results",  label: "Results",  count: resultsCount, live: hasLive },
         ]}
         activeTab={tab}
         basePath="/predictions"
       />
 
       {filtered.length === 0 ? (
-        <p className="text-gray-500 text-sm py-8 text-center">
-          {tab === "upcoming" ? "No upcoming matches." : "No results yet."}
-        </p>
+        <div className="py-16 text-center">
+          <p className="text-gray-400 text-sm">
+            {tab === "upcoming"
+              ? "All picks are locked — no matches left to predict."
+              : "Results appear here once matches are played."}
+          </p>
+          <Link
+            href={`/predictions?tab=${tab === "upcoming" ? "results" : "upcoming"}`}
+            className="mt-3 inline-block text-sm text-emerald-400 hover:text-emerald-300 transition-colors"
+          >
+            {tab === "upcoming" ? "See your results →" : "Make your picks →"}
+          </Link>
+        </div>
       ) : (
         STAGE_ORDER.filter((s) => byStage.has(s)).map((stage) => (
           <section key={stage} className="mb-10">
-            <h2 className="text-sm font-semibold uppercase tracking-wider text-emerald-400 mb-3">
+            <h2 className="mb-3 text-[11px] font-bold uppercase tracking-widest text-emerald-400">
               {STAGE_LABELS[stage as Stage]}
             </h2>
             <PredictionsGrid

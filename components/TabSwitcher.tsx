@@ -3,6 +3,7 @@ import Link from "next/link";
 interface Tab {
   key: string;
   label: string;
+  count?: number;
   live?: boolean;
 }
 
@@ -16,25 +17,37 @@ export default function TabSwitcher({
   basePath: string;
 }) {
   return (
-    <div className="flex gap-1 bg-gray-900/50 border border-white/10 rounded-xl p-1 mb-6">
-      {tabs.map((tab) => (
-        <Link
-          key={tab.key}
-          href={`${basePath}?tab=${tab.key}`}
-          className={`flex-1 flex items-center justify-center gap-2 py-2 px-4 rounded-lg text-sm font-medium transition-colors ${
-            activeTab === tab.key
-              ? "bg-emerald-600 text-white"
-              : "text-gray-400 hover:text-white"
-          }`}
-        >
-          {tab.label}
-          {tab.live && (
-            <span className="bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full leading-none animate-pulse">
-              LIVE
-            </span>
-          )}
-        </Link>
-      ))}
+    <div className="flex border-b border-white/10 mb-8">
+      {tabs.map((tab) => {
+        const isActive = activeTab === tab.key;
+        return (
+          <Link
+            key={tab.key}
+            href={`${basePath}?tab=${tab.key}`}
+            className={`-mb-px mr-8 flex items-center gap-2 border-b-2 pb-3 text-sm font-semibold transition-colors
+              ${isActive
+                ? "border-emerald-400 text-white"
+                : "border-transparent text-gray-500 hover:text-gray-300"
+              }`}
+          >
+            {tab.label}
+            {tab.count !== undefined && (
+              <span className={`rounded px-1.5 py-0.5 font-mono text-[11px] leading-none
+                ${isActive
+                  ? "bg-emerald-950/80 text-emerald-400"
+                  : "bg-white/5 text-gray-600"
+                }`}>
+                {tab.count}
+              </span>
+            )}
+            {tab.live && (
+              <span className="animate-pulse rounded-full bg-red-500 px-1.5 py-0.5 text-[9px] font-bold leading-none text-white">
+                LIVE
+              </span>
+            )}
+          </Link>
+        );
+      })}
     </div>
   );
 }
