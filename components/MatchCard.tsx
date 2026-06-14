@@ -28,7 +28,7 @@ function GroupOrStageBadge({ stage, groupLetter }: { stage: string; groupLetter:
 
 function FlagImg({ team, className = "w-8 h-6" }: { team: Team | null; className?: string }) {
   if (!team) return <span className={`${className} rounded bg-gray-700 shrink-0 inline-block`} />;
-  const src = team.flag_url ?? getFlagUrl(team.name);
+  const src = getFlagUrl(team.name) ?? team.flag_url;
   if (!src) return <span className={`${className} rounded bg-gray-700 shrink-0 inline-block`} />;
   // eslint-disable-next-line @next/next/no-img-element
   return <img src={src} alt={team.name} className={`${className} object-cover rounded shrink-0 border border-gray-700`} />;

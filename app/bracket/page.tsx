@@ -10,7 +10,7 @@ export const revalidate = 60;
 
 function Flag({ team }: { team: Team | null | undefined }) {
   if (!team) return null;
-  const src = team.flag_url ?? getFlagUrl(team.name);
+  const src = getFlagUrl(team.name) ?? team.flag_url;
   if (!src) return null;
   // eslint-disable-next-line @next/next/no-img-element
   return <img src={src} alt={team.name} className="w-5 h-3.5 object-cover rounded-sm border border-gray-700 shrink-0" />;
@@ -263,8 +263,8 @@ export default async function BracketPage() {
                 if (!m) return null;
                 const hasScore = m.home_score !== null;
                 const isLive   = m.status === "live";
-                const homeSrc  = m.home_team?.flag_url ?? (m.home_team ? getFlagUrl(m.home_team.name) : null);
-                const awaySrc  = m.away_team?.flag_url ?? (m.away_team ? getFlagUrl(m.away_team.name) : null);
+                const homeSrc  = (m.home_team ? getFlagUrl(m.home_team.name) : null) ?? m.home_team?.flag_url ?? null;
+                const awaySrc  = (m.away_team ? getFlagUrl(m.away_team.name) : null) ?? m.away_team?.flag_url ?? null;
                 return (
                   <Link key={i} href={`/matches/${m.id}`}
                     className="flex items-center gap-2 px-4 py-2.5 hover:bg-white/5 transition-colors">

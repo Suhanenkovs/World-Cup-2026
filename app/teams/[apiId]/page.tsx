@@ -55,7 +55,7 @@ function MatchRow({ match, teamApiId }: { match: MatchWithTeams; teamApiId: stri
   const hasScore  = match.home_score !== null;
   const isHome    = match.home_team?.api_id === teamApiId;
   const opponent  = isHome ? match.away_team : match.home_team;
-  const oppFlag   = opponent?.flag_url ?? (opponent ? getFlagUrl(opponent.name) : null);
+  const oppFlag   = (opponent ? getFlagUrl(opponent.name) : null) ?? opponent?.flag_url ?? null;
   const teamScore = isHome ? match.home_score : match.away_score;
   const oppScore  = isHome ? match.away_score : match.home_score;
 
@@ -122,7 +122,7 @@ export default async function TeamPage({
   if (!dbTeam) notFound();
 
   const teamName = dbTeam.name;
-  const flagSrc  = dbTeam.flag_url ?? getFlagUrl(teamName);
+  const flagSrc  = getFlagUrl(teamName) ?? dbTeam.flag_url;
 
   // Fetch this team's WC matches from our DB
   const { data: matchRows } = await supabase

@@ -110,8 +110,8 @@ export default async function PlayerPage({
                   const stage = m.stage as Stage;
                   const homeName = m.home_team?.short_name ?? m.home_team?.name ?? "?";
                   const awayName = m.away_team?.short_name ?? m.away_team?.name ?? "?";
-                  const homeSrc = m.home_team?.flag_url ?? (m.home_team ? getFlagUrl(m.home_team.name) : null);
-                  const awaySrc = m.away_team?.flag_url ?? (m.away_team ? getFlagUrl(m.away_team.name) : null);
+                  const homeSrc = (m.home_team ? getFlagUrl(m.home_team.name) : null) ?? m.home_team?.flag_url ?? null;
+                  const awaySrc = (m.away_team ? getFlagUrl(m.away_team.name) : null) ?? m.away_team?.flag_url ?? null;
                   const pts = p.points_earned;
                   const ql = pts !== null && pts !== undefined ? qualityLabel(pts, stage) : null;
 
@@ -170,8 +170,8 @@ export default async function PlayerPage({
               const m = p.match as any;
               if (!m) return null;
               const kickoff = new Date(m.scheduled_at);
-              const homeSrc = m.home_team?.flag_url ?? (m.home_team ? getFlagUrl(m.home_team.name) : null);
-              const awaySrc = m.away_team?.flag_url ?? (m.away_team ? getFlagUrl(m.away_team.name) : null);
+              const homeSrc = (m.home_team ? getFlagUrl(m.home_team.name) : null) ?? m.home_team?.flag_url ?? null;
+              const awaySrc = (m.away_team ? getFlagUrl(m.away_team.name) : null) ?? m.away_team?.flag_url ?? null;
               return (
                 <Link
                   key={p.id}

@@ -138,8 +138,8 @@ function GroupFixtures({ matches }: { matches: MatchWithTeams[] }) {
       {matches.map((m) => {
         const kickoff = new Date(m.scheduled_at);
         const hasScore = m.home_score !== null;
-        const homeFlagSrc = m.home_team?.flag_url ?? (m.home_team ? getFlagUrl(m.home_team.name) : null);
-        const awayFlagSrc = m.away_team?.flag_url ?? (m.away_team ? getFlagUrl(m.away_team.name) : null);
+        const homeFlagSrc = (m.home_team ? getFlagUrl(m.home_team.name) : null) ?? m.home_team?.flag_url ?? null;
+        const awayFlagSrc = (m.away_team ? getFlagUrl(m.away_team.name) : null) ?? m.away_team?.flag_url ?? null;
         const isLive = m.status === "live";
         return (
           <Link
