@@ -36,15 +36,15 @@ export default function AdminTabs({ players, questions, prizeConfig, matches }: 
   return (
     <>
       {/* Tab bar */}
-      <div className="flex gap-1 mb-6 bg-gray-900/60 border border-white/10 rounded-xl p-1">
+      <div className="flex border-b border-white/10 mb-8">
         {TABS.map(({ id, label }) => (
           <button
             key={id}
             onClick={() => setTab(id)}
-            className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-colors ${
+            className={`-mb-px mr-8 pb-3 text-sm font-semibold border-b-2 transition-colors ${
               tab === id
-                ? "bg-amber-600 text-white"
-                : "text-gray-400 hover:text-white"
+                ? "border-emerald-400 text-white"
+                : "border-transparent text-gray-500 hover:text-gray-300"
             }`}
           >
             {label}

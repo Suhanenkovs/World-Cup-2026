@@ -4,6 +4,7 @@ import { BONUS_LOCK_AT } from "@/lib/constants";
 import type { BonusQuestion, BonusAnswer } from "@/types/database";
 import BonusForm from "@/components/BonusForm";
 import BonusAllAnswers from "@/components/BonusAllAnswers";
+import TabSwitcher from "@/components/TabSwitcher";
 
 export const revalidate = 0;
 
@@ -70,25 +71,14 @@ export default async function BonusPage({
         )}
       </div>
 
-      {/* Tabs */}
-      <div className="flex gap-1 mb-6 bg-gray-900/50 backdrop-blur-sm border border-white/10 rounded-lg p-1 w-fit">
-        <a
-          href="/bonus"
-          className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${
-            activeTab === "mine" ? "bg-amber-600 text-white" : "text-gray-400 hover:text-white"
-          }`}
-        >
-          My Answers
-        </a>
-        <a
-          href="/bonus?tab=all"
-          className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${
-            activeTab === "all" ? "bg-amber-600 text-white" : "text-gray-400 hover:text-white"
-          }`}
-        >
-          All Answers
-        </a>
-      </div>
+      <TabSwitcher
+        tabs={[
+          { key: "mine", label: "My Answers" },
+          { key: "all",  label: "All Answers" },
+        ]}
+        activeTab={activeTab}
+        basePath="/bonus"
+      />
 
       {activeTab === "mine" ? (
         <>
