@@ -12,7 +12,7 @@ const CODES: Record<string, string> = {
   "Cuba": "cu",
 
   // CONMEBOL
-  "Brazil": "br",
+  "Brazil": "br", "Brasil": "br",
   "Argentina": "ar",
   "Colombia": "co",
   "Uruguay": "uy",
