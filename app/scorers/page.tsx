@@ -71,10 +71,9 @@ export default async function ScorersPage() {
                 const flagSrc = getFlagUrl(s.team.name) ?? getFlagUrl(s.team.shortName);
                 // Rank is by goals only — same goals = same rank
                 const rank = scorers.filter((x, j) => j < i && x.goals > s.goals).length + 1;
-                const sameRankAsPrev = i > 0 && scorers[i - 1].goals === s.goals;
                 return (
                   <tr key={s.player.id} className={`border-b border-white/5 last:border-0 ${i % 2 !== 0 ? "bg-white/[0.02]" : ""}`}>
-                    <td className="px-3 py-2.5 text-gray-500 font-mono text-xs">{sameRankAsPrev ? "" : rank}</td>
+                    <td className="px-3 py-2.5 text-gray-500 font-mono text-xs">{rank}</td>
                     <td className="px-3 py-2.5">
                       <div className="text-white font-medium">{s.player.name}</div>
                       <div className="flex items-center gap-1.5 mt-0.5 sm:hidden">
