@@ -170,14 +170,18 @@ export async function GET(request: NextRequest) {
         .eq("match_id", db.id)
         .is("points_earned", null);
 
-      for (const pred of preds ?? []) {
-        const pts = calculateMatchPoints(
-          pred.pred_home, pred.pred_away,
-          homeScore, awayScore,
-          db.stage as Stage
+      if (preds?.length) {
+        await Promise.all(
+          preds.map((pred) => {
+            const pts = calculateMatchPoints(
+              pred.pred_home, pred.pred_away,
+              homeScore, awayScore,
+              db.stage as Stage
+            );
+            return supabase.from("predictions").update({ points_earned: pts }).eq("id", pred.id);
+          })
         );
-        await supabase.from("predictions").update({ points_earned: pts }).eq("id", pred.id);
-        scored++;
+        scored += preds.length;
       }
     }
   }
