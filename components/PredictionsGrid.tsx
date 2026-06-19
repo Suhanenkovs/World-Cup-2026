@@ -40,14 +40,14 @@ interface Props {
 export default function PredictionsGrid({ matches, predictions, stage, userId, isPaid }: Props) {
   const now = new Date();
 
-  const [values, setValues] = useState<Record<string, { home: string; away: string }>>(() => {
-    const init: Record<string, { home: string; away: string }> = {};
-    for (const m of matches) {
+  const original = Object.fromEntries(
+    matches.map((m) => {
       const p = predictions[m.id];
-      init[m.id] = { home: p ? String(p.pred_home) : "", away: p ? String(p.pred_away) : "" };
-    }
-    return init;
-  });
+      return [m.id, { home: p ? String(p.pred_home) : "", away: p ? String(p.pred_away) : "" }];
+    })
+  );
+
+  const [values, setValues] = useState<Record<string, { home: string; away: string }>>(original);
 
   const [dirty, setDirty] = useState<Set<string>>(new Set());
   const [rowErrors, setRowErrors] = useState<Record<string, string>>({});
@@ -68,6 +68,17 @@ export default function PredictionsGrid({ matches, predictions, stage, userId, i
     setDirty((prev) => new Set(prev).add(matchId));
     setSaveStatus("idle");
     setRowErrors((prev) => { const next = { ...prev }; delete next[matchId]; return next; });
+  }
+
+  function discardAll() {
+    setValues((prev) => {
+      const next = { ...prev };
+      for (const id of dirtyEditable) next[id] = original[id];
+      return next;
+    });
+    setDirty((prev) => { const next = new Set(prev); dirtyEditable.forEach((id) => next.delete(id)); return next; });
+    setRowErrors({});
+    setSaveStatus("idle");
   }
 
   function saveAll() {
@@ -128,13 +139,22 @@ export default function PredictionsGrid({ matches, predictions, stage, userId, i
           <span className="text-sm text-emerald-300">
             {dirtyEditable.length} unsaved change{dirtyEditable.length !== 1 ? "s" : ""}
           </span>
-          <button
-            onClick={saveAll}
-            disabled={isPending || !isPaid}
-            className="text-sm font-medium bg-emerald-600 hover:bg-emerald-500 disabled:opacity-40 text-white px-4 py-1.5 rounded-lg transition-colors"
-          >
-            {isPending ? "Saving…" : "Save all"}
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={discardAll}
+              disabled={isPending}
+              className="text-sm text-gray-400 hover:text-white disabled:opacity-40 transition-colors"
+            >
+              Discard
+            </button>
+            <button
+              onClick={saveAll}
+              disabled={isPending || !isPaid}
+              className="text-sm font-medium bg-emerald-600 hover:bg-emerald-500 disabled:opacity-40 text-white px-4 py-1.5 rounded-lg transition-colors"
+            >
+              {isPending ? "Saving…" : "Save all"}
+            </button>
+          </div>
         </div>
       )}
       {saveStatus === "saved" && dirtyEditable.length === 0 && (
