@@ -51,7 +51,7 @@ export default async function ScorersPage() {
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-8">
-      <AutoRefresh />
+      <AutoRefresh intervalMs={300000} />
       <div className="flex items-baseline justify-between mb-6">
         <h1 className="text-2xl font-bold text-white">Tournament Top Scorers</h1>
         {scorers.length > 0 && (
