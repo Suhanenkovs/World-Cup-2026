@@ -1,9 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { getFlagUrl } from "@/lib/teamFlags";
-import AutoRefresh from "@/components/AutoRefresh";
-
-export const revalidate = 60;
+export const dynamic = "force-dynamic";
 
 interface FDScorer {
   player: { id: number; name: string; nationality: string | null };
@@ -18,7 +16,7 @@ async function fetchScorers(): Promise<FDScorer[]> {
   try {
     const res = await fetch("https://api.football-data.org/v4/competitions/WC/scorers?limit=100", {
       headers: { "X-Auth-Token": process.env.FOOTBALL_DATA_API_KEY! },
-      next: { revalidate: 60 },
+      next: { tags: ["scorers"] },
     });
     if (!res.ok) return [];
     const json = await res.json();
@@ -51,7 +49,6 @@ export default async function ScorersPage() {
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-8">
-      <AutoRefresh intervalMs={300000} />
       <div className="flex items-baseline justify-between mb-6">
         <h1 className="text-2xl font-bold text-white">Tournament Top Scorers</h1>
         {scorers.length > 0 && (

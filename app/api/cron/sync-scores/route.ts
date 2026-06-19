@@ -1,4 +1,5 @@
 ﻿import { NextRequest } from "next/server";
+import { revalidateTag } from "next/cache";
 import { createServiceClient } from "@/lib/supabase/server";
 import { calculateMatchPoints, type Stage } from "@/lib";
 
@@ -185,6 +186,8 @@ export async function GET(request: NextRequest) {
       }
     }
   }
+
+  if (synced > 0) revalidateTag("scorers");
 
   return Response.json({ synced, scored, checked: dbMatches.length });
 }
