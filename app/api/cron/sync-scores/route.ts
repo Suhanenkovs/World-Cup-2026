@@ -187,7 +187,7 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  if (synced > 0) revalidateTag("scorers");
+  if (synced > 0) revalidateTag("scorers", { expire: 86400 });
 
   return Response.json({ synced, scored, checked: dbMatches.length });
 }
