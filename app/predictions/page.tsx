@@ -44,11 +44,17 @@ export default async function PredictionsPage({
   const upcomingCount = allMatches.filter((m) => m.status === "scheduled").length;
   const resultsCount  = allMatches.filter((m) => m.status === "finished" || m.status === "live").length;
 
-  const filtered = allMatches.filter((m) =>
-    tab === "results"
-      ? m.status === "finished" || m.status === "live"
-      : m.status === "scheduled"
-  );
+  const filtered = allMatches
+    .filter((m) =>
+      tab === "results"
+        ? m.status === "finished" || m.status === "live"
+        : m.status === "scheduled"
+    )
+    .sort((a, b) =>
+      tab === "results"
+        ? new Date(b.scheduled_at).getTime() - new Date(a.scheduled_at).getTime()
+        : 0
+    );
 
   const byStage = new Map<string, MatchWithTeams[]>();
   for (const m of filtered) {
