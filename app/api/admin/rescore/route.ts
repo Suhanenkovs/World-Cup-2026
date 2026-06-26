@@ -16,39 +16,51 @@ export async function POST(request: NextRequest) {
 
   const service = createServiceClient();
 
-  const { data: matches } = await service
+  const { data: matches, error: matchErr } = await service
     .from("matches")
     .select("id, stage, home_score, away_score")
     .eq("status", "finished")
     .not("home_score", "is", null)
-    .not("away_score", "is", null);
+    .not("away_score", "is", null)
+    .limit(500);
 
-  if (!matches?.length) return Response.json({ rescored: 0, matches: 0 });
+  if (matchErr) return Response.json({ error: matchErr.message }, { status: 500 });
+  if (!matches?.length) return Response.json({ success: true, rescored: 0, matches: 0, errors: [] });
 
   let rescored = 0;
+  const errors: string[] = [];
 
-  await Promise.all(
-    matches.map(async (match) => {
-      const { data: preds } = await service
-        .from("predictions")
-        .select("id, pred_home, pred_away")
-        .eq("match_id", match.id);
+  // Sequential per match to avoid connection pool saturation
+  for (const match of matches) {
+    const { data: preds, error: predErr } = await service
+      .from("predictions")
+      .select("id, pred_home, pred_away")
+      .eq("match_id", match.id)
+      .limit(500);
 
-      if (!preds?.length) return;
+    if (predErr) { errors.push(`Match ${match.id}: ${predErr.message}`); continue; }
+    if (!preds?.length) continue;
 
-      await Promise.all(
-        preds.map((pred) => {
-          const pts = calculateMatchPoints(
-            pred.pred_home, pred.pred_away,
-            match.home_score!, match.away_score!,
-            match.stage as Stage
-          );
-          rescored++;
-          return service.from("predictions").update({ points_earned: pts }).eq("id", pred.id);
-        })
+    for (const pred of preds) {
+      const pts = calculateMatchPoints(
+        pred.pred_home,
+        pred.pred_away,
+        match.home_score!,
+        match.away_score!,
+        match.stage as Stage
       );
-    })
-  );
+      const { error: updErr } = await service
+        .from("predictions")
+        .update({ points_earned: pts })
+        .eq("id", pred.id);
 
-  return Response.json({ success: true, rescored, matches: matches.length });
+      if (updErr) {
+        errors.push(`Pred ${pred.id}: ${updErr.message}`);
+      } else {
+        rescored++;
+      }
+    }
+  }
+
+  return Response.json({ success: errors.length === 0, rescored, matches: matches.length, errors });
 }
