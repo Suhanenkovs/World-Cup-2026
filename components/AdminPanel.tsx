@@ -42,6 +42,7 @@ export default function AdminPanel({ players, questions, prizeConfig, tab }: Pro
     Object.fromEntries(players.map((p) => [p.id, (p as any).name ?? ""]))
   );
   const [nameStatus, setNameStatus] = useState<Record<string, string>>({});
+  const [resetStatus, setResetStatus] = useState<Record<string, string>>({});
   const [bonusAnswers, setBonusAnswers] = useState<Record<string, string>>({});
   const [bonusStatus, setBonusStatus] = useState<Record<string, string>>({});
   const [autoResolveStatus, setAutoResolveStatus] = useState("");
@@ -166,6 +167,27 @@ export default function AdminPanel({ players, questions, prizeConfig, tab }: Pro
       ...s,
       [userId]: json.success ? (!currentPaid ? "Marked paid ✓" : "Marked unpaid") : `Error: ${json.error}`,
     }));
+  }
+
+  async function getResetLink(userId: string) {
+    setResetStatus((s) => ({ ...s, [userId]: "Generating…" }));
+    const res = await fetch("/api/admin/reset-link", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ userId }),
+    });
+    const json = await res.json();
+    if (!json.link) {
+      setResetStatus((s) => ({ ...s, [userId]: `Error: ${json.error}` }));
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(json.link);
+      setResetStatus((s) => ({ ...s, [userId]: "Link copied! Share with the user." }));
+    } catch {
+      setResetStatus((s) => ({ ...s, [userId]: json.link }));
+    }
+    setTimeout(() => setResetStatus((s) => ({ ...s, [userId]: "" })), 30000);
   }
 
   async function resolveBonus(questionId: string) {
@@ -426,6 +448,19 @@ export default function AdminPanel({ players, questions, prizeConfig, tab }: Pro
                   Save name
                 </button>
                 {nameStatus[p.id] && <span className="text-xs text-gray-400">{nameStatus[p.id]}</span>}
+              </div>
+              <div className="flex gap-2 items-start">
+                <button
+                  onClick={() => getResetLink(p.id)}
+                  className="text-xs bg-gray-800 hover:bg-gray-700 text-gray-400 hover:text-white px-3 py-1.5 rounded-lg transition-colors shrink-0"
+                >
+                  Get reset link
+                </button>
+                {resetStatus[p.id] && (
+                  resetStatus[p.id].startsWith("https://")
+                    ? <span className="text-[10px] text-gray-400 break-all font-mono leading-tight">{resetStatus[p.id]}</span>
+                    : <span className="text-xs text-gray-400 self-center">{resetStatus[p.id]}</span>
+                )}
               </div>
             </div>
           ))}
