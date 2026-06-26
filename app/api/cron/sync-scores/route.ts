@@ -163,13 +163,19 @@ export async function GET(request: NextRequest) {
       synced++;
     }
 
-    // Score predictions once the match finishes
+    // Score predictions once the match finishes.
+    // If the score changed (API correction of an earlier stale value), rescore ALL predictions
+    // for this match so previously wrong scores get fixed. Otherwise only score new/unscored ones.
     if (status === "finished" && homeScore !== null && awayScore !== null) {
-      const { data: preds } = await supabase
+      const scoreChanged = db.status !== "finished" || db.home_score !== homeScore || db.away_score !== awayScore;
+
+      let predsQuery = supabase
         .from("predictions")
         .select("id, pred_home, pred_away")
-        .eq("match_id", db.id)
-        .is("points_earned", null);
+        .eq("match_id", db.id);
+      if (!scoreChanged) predsQuery = predsQuery.is("points_earned", null);
+
+      const { data: preds } = await predsQuery;
 
       if (preds?.length) {
         await Promise.all(

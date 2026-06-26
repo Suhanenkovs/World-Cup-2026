@@ -283,6 +283,18 @@ export default function AdminPanel({ players, questions, prizeConfig, tab }: Pro
     });
   }
 
+  const [rescoreStatus, setRescoreStatus] = useState("");
+
+  async function rescoreAll() {
+    if (!confirm("Rescore all finished matches? This overwrites all existing points with freshly calculated values.")) return;
+    setRescoreStatus("Rescoring…");
+    const res = await fetch("/api/admin/rescore", { method: "POST" });
+    const json = await res.json();
+    setRescoreStatus(json.success
+      ? `Done — ${json.rescored} predictions rescored across ${json.matches} matches.`
+      : `Error: ${json.error}`);
+  }
+
   return (
     <div className="flex flex-col gap-8">
       {tab === "participants" && <>
@@ -473,13 +485,23 @@ export default function AdminPanel({ players, questions, prizeConfig, tab }: Pro
         <p className="text-sm text-gray-400 mb-3">
           Automatically runs every 5 minutes via cron-job.org during match windows. Trigger manually here if needed.
         </p>
-        <button
-          onClick={triggerSync}
-          disabled={isPending}
-          className="bg-gray-700 hover:bg-gray-600 disabled:opacity-40 text-white text-sm px-4 py-2 rounded-lg transition-colors"
-        >
-          {isPending ? "Syncing…" : "Sync scores now"}
-        </button>
+        <div className="flex flex-wrap gap-2">
+          <button
+            onClick={triggerSync}
+            disabled={isPending}
+            className="bg-gray-700 hover:bg-gray-600 disabled:opacity-40 text-white text-sm px-4 py-2 rounded-lg transition-colors"
+          >
+            {isPending ? "Syncing…" : "Sync scores now"}
+          </button>
+          <button
+            onClick={rescoreAll}
+            disabled={isPending}
+            className="bg-red-900/60 hover:bg-red-800/60 disabled:opacity-40 text-red-300 text-sm px-4 py-2 rounded-lg transition-colors"
+          >
+            Rescore all
+          </button>
+        </div>
+        {rescoreStatus && <p className="text-sm text-gray-400 mt-2">{rescoreStatus}</p>}
       </div>
       </>}
       {tab === "bonus" && <>
