@@ -206,12 +206,14 @@ export async function GET(request: NextRequest) {
   // Makes one API call covering the remaining tournament to fill them in as
   // football-data.org publishes the teams for each round.
   const KNOCKOUT_STAGES = ["round_of_32", "round_of_16", "quarterfinal", "semifinal", "third_place", "final"];
+  const in48h = new Date(now.getTime() + 48 * 60 * 60 * 1000).toISOString();
   const { data: missingTeamMatches } = await supabase
     .from("matches")
     .select("id, scheduled_at")
     .in("stage", KNOCKOUT_STAGES)
     .or("home_team_id.is.null,away_team_id.is.null")
     .gt("scheduled_at", now.toISOString())
+    .lte("scheduled_at", in48h)
     .limit(1);
 
   let teamsAssigned = 0;

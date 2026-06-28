@@ -6,7 +6,7 @@
 - **Next.js** (App Router) + **Supabase** + **Vercel** (auto-deploys on push to `master`)
 - **Tailwind CSS** — glass card style: `bg-gray-900/50 backdrop-blur-sm border border-white/10`
 - **football-data.org** free tier — scorers, team info (10 req/min limit). NOT used for standings.
-- **cron-job.org** — external cron service calling `/api/cron/sync-scores` every minute with `Authorization: Bearer {CRON_SECRET}`
+- **cron-job.org** — external cron service calling `/api/cron/sync-scores` every 5 minutes with `Authorization: Bearer {CRON_SECRET}`
 
 ## Key conventions
 
@@ -46,7 +46,7 @@
 Group Stage · Knockout (desktop only) · Top Scorers · Matches · My Picks · Bonus · Leaderboard
 
 ### Score syncing (`/api/cron/sync-scores`)
-- Called every minute by **cron-job.org** (not Vercel crons — Vercel Hobby plan only supports daily intervals)
+- Called every 5 minutes by **cron-job.org** (not Vercel crons — Vercel Hobby plan only supports daily intervals)
 - **Never add cron config to `vercel.json`** — it blocks all deployments on the Hobby plan
 - The cron requires `Authorization: Bearer {CRON_SECRET}` header — configured in cron-job.org job settings and in Vercel environment variables
 - Sync logic: if kickoff time has passed and API still says TIMED → set status to `live`. Only sets `finished` when API explicitly returns FINISHED.
