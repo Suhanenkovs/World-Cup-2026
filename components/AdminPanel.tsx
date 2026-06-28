@@ -192,7 +192,10 @@ export default function AdminPanel({ players, questions, prizeConfig, tab }: Pro
 
   async function resolveBonus(questionId: string) {
     const answer = bonusAnswers[questionId]?.trim();
-    if (!answer) return;
+    if (!answer) {
+      setBonusStatus((s) => ({ ...s, [questionId]: "Enter an answer first." }));
+      return;
+    }
     setBonusStatus((s) => ({ ...s, [questionId]: "Resolving…" }));
     const res = await fetch("/api/admin/resolve-bonus", {
       method: "POST",

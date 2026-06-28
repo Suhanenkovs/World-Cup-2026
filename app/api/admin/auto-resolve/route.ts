@@ -60,11 +60,12 @@ export async function POST(request: NextRequest) {
   // Tournament winner
   const winner: string | null = comp.currentSeason?.winner?.name ?? null;
 
-  // Finalists (both teams in the Final)
+  // Finalists (both teams in the Final) — only when both names are non-empty
   const finalMatch = allMatches.find((m) => m.stage === "FINAL");
-  const finalists: string[] = finalMatch
-    ? [finalMatch.homeTeam.name, finalMatch.awayTeam.name]
-    : [];
+  const finalists: string[] =
+    finalMatch?.homeTeam?.name && finalMatch?.awayTeam?.name
+      ? [finalMatch.homeTeam.name, finalMatch.awayTeam.name]
+      : [];
 
   // Golden Boot — top scorer name + goals
   const topScorer = scorersJson.scorers?.[0];
