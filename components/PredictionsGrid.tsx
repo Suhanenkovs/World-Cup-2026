@@ -131,8 +131,17 @@ export default function PredictionsGrid({ matches, predictions, stage, userId, i
     });
   }
 
+  const isKnockout = stage !== "group";
+
   return (
     <div>
+      {/* Knockout regulation-time notice */}
+      {isKnockout && (
+        <div className="mb-3 px-3 py-2 rounded-lg bg-amber-950/40 border border-amber-800/40 text-xs text-amber-300">
+          Predictions are scored on the <span className="font-semibold">90-minute score</span> only — extra time and penalties don&apos;t count. Draws are valid.
+        </div>
+      )}
+
       {/* Save bar */}
       {dirtyEditable.length > 0 && (
         <div className="flex items-center justify-between bg-emerald-950/60 border border-emerald-800/50 rounded-xl px-4 py-2.5 mb-3">
