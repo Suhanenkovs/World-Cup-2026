@@ -6,7 +6,7 @@ import Link from "next/link";
 import type { MatchWithTeams } from "@/types/database";
 import AutoRefresh from "@/components/AutoRefresh";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 60;
 
 // ── Standings computed from DB finished matches only ──────────────────────────
 
@@ -200,9 +200,6 @@ function GroupFixtures({ matches }: { matches: MatchWithTeams[] }) {
 
 export default async function GroupsPage() {
   const supabase = await createClient();
-
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) { const { redirect } = await import("next/navigation"); redirect("/login"); }
 
   const { data: matches } = await supabase
     .from("matches")

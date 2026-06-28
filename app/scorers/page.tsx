@@ -1,7 +1,5 @@
-import { createClient } from "@/lib/supabase/server";
-import { redirect } from "next/navigation";
 import { getFlagUrl } from "@/lib/teamFlags";
-export const dynamic = "force-dynamic";
+export const revalidate = 300;
 
 interface FDScorer {
   player: { id: number; name: string; nationality: string | null };
@@ -27,10 +25,6 @@ async function fetchScorers(): Promise<FDScorer[]> {
 }
 
 export default async function ScorersPage() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect("/login");
-
   const raw = await fetchScorers();
 
   // Sort: goals desc → assists desc → penalties asc → games played asc
