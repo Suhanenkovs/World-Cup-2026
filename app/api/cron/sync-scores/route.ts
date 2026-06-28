@@ -64,7 +64,13 @@ interface FDScore {
   penalties: FDScoreVal | null;
   duration:  string | null;
 }
-interface FDMatch { status: string; homeTeam: FDTeam; awayTeam: FDTeam; score: FDScore }
+interface FDMatch {
+  utcDate: string;
+  status: string;
+  homeTeam: FDTeam;
+  awayTeam: FDTeam;
+  score: FDScore;
+}
 
 // ── Cron handler ──────────────────────────────────────────────────────────────
 
@@ -195,6 +201,73 @@ export async function GET(request: NextRequest) {
 
   if (synced > 0) revalidateTag("scorers", { expire: 86400 });
 
-  return Response.json({ synced, scored, checked: dbMatches.length });
+  // ── Sync knockout team assignments ────────────────────────────────────────
+  // Runs only when there are future knockout matches with null teams in the DB.
+  // Makes one API call covering the remaining tournament to fill them in as
+  // football-data.org publishes the teams for each round.
+  const KNOCKOUT_STAGES = ["round_of_32", "round_of_16", "quarterfinal", "semifinal", "third_place", "final"];
+  const { data: missingTeamMatches } = await supabase
+    .from("matches")
+    .select("id, scheduled_at")
+    .in("stage", KNOCKOUT_STAGES)
+    .or("home_team_id.is.null,away_team_id.is.null")
+    .gt("scheduled_at", now.toISOString())
+    .limit(1);
+
+  let teamsAssigned = 0;
+  if (missingTeamMatches?.length) {
+    const knockoutRes = await fetch(
+      `${FD_BASE}/competitions/WC/matches?dateFrom=${now.toISOString().slice(0, 10)}&dateTo=2026-07-20`,
+      { headers: { "X-Auth-Token": process.env.FOOTBALL_DATA_API_KEY! } }
+    );
+    if (knockoutRes.ok) {
+      const allFuture: FDMatch[] = (await knockoutRes.json()).matches ?? [];
+
+      // Fetch teams table for name → id lookup
+      const { data: allTeams } = await supabase.from("teams").select("id, name");
+      const teamByNorm = new Map((allTeams ?? []).map((t) => [normalize(t.name), t.id]));
+      const resolveTeam = (fdTeam: FDTeam): string | null => {
+        if (!fdTeam?.name) return null;
+        return (
+          teamByNorm.get(normalize(fdTeam.name)) ??
+          teamByNorm.get(normalize(fdTeam.shortName ?? "")) ??
+          teamByNorm.get(normalize(fdTeam.tla ?? "")) ??
+          null
+        );
+      };
+
+      // Fetch all knockout matches with null teams from DB
+      const { data: nullTeamMatches } = await supabase
+        .from("matches")
+        .select("id, scheduled_at, home_team_id, away_team_id")
+        .in("stage", KNOCKOUT_STAGES)
+        .or("home_team_id.is.null,away_team_id.is.null");
+
+      const dbByTime = new Map(
+        (nullTeamMatches ?? []).map((m) => [m.scheduled_at.replace("+00:00", "Z"), m])
+      );
+
+      for (const fdM of allFuture) {
+        const dbM = dbByTime.get(fdM.utcDate);
+        if (!dbM) continue;
+
+        const patch: Record<string, string> = {};
+        if (!dbM.home_team_id) {
+          const id = resolveTeam(fdM.homeTeam);
+          if (id) patch.home_team_id = id;
+        }
+        if (!dbM.away_team_id) {
+          const id = resolveTeam(fdM.awayTeam);
+          if (id) patch.away_team_id = id;
+        }
+        if (!Object.keys(patch).length) continue;
+
+        const { error } = await supabase.from("matches").update(patch).eq("id", dbM.id);
+        if (!error) teamsAssigned++;
+      }
+    }
+  }
+
+  return Response.json({ synced, scored, checked: dbMatches.length, teamsAssigned });
 }
 
