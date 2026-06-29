@@ -202,19 +202,34 @@ export async function GET(request: NextRequest) {
   if (synced > 0) revalidateTag("scorers", { expire: 86400 });
 
   // ── Sync knockout team assignments ────────────────────────────────────────
-  // Runs only when there are future knockout matches with null teams in the DB.
-  // Makes one API call covering the remaining tournament to fill them in as
-  // football-data.org publishes the teams for each round.
+  // Triggers whenever:
+  //   (a) the cron is already tracking an active knockout match (live / recently
+  //       finished) — so winners are promoted as soon as football-data.org knows, or
+  //   (b) a null-team knockout match is coming up within 48 h (normal lookahead).
+  // Both cases make one extra API call covering the full remaining schedule.
   const KNOCKOUT_STAGES = ["round_of_32", "round_of_16", "quarterfinal", "semifinal", "third_place", "final"];
+
+  const hasActiveKnockout = (dbMatches ?? []).some((m) =>
+    KNOCKOUT_STAGES.includes((m as unknown as { stage: string }).stage)
+  );
+
   const in48h = new Date(now.getTime() + 48 * 60 * 60 * 1000).toISOString();
-  const { data: missingTeamMatches } = await supabase
-    .from("matches")
-    .select("id, scheduled_at")
-    .in("stage", KNOCKOUT_STAGES)
-    .or("home_team_id.is.null,away_team_id.is.null")
-    .gt("scheduled_at", now.toISOString())
-    .lte("scheduled_at", in48h)
-    .limit(1);
+  const { data: missingTeamMatches } = hasActiveKnockout
+    ? await supabase
+        .from("matches")
+        .select("id")
+        .in("stage", KNOCKOUT_STAGES)
+        .or("home_team_id.is.null,away_team_id.is.null")
+        .gt("scheduled_at", now.toISOString())
+        .limit(1)
+    : await supabase
+        .from("matches")
+        .select("id")
+        .in("stage", KNOCKOUT_STAGES)
+        .or("home_team_id.is.null,away_team_id.is.null")
+        .gt("scheduled_at", now.toISOString())
+        .lte("scheduled_at", in48h)
+        .limit(1);
 
   let teamsAssigned = 0;
   if (missingTeamMatches?.length) {
