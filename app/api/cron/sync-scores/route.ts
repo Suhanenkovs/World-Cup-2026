@@ -136,6 +136,71 @@ export async function GET(request: NextRequest) {
   const supabase = createServiceClient();
   const now = new Date();
 
+  // ── Bracket auto-promotion (runs unconditionally every tick) ─────────────
+  // Must run before the early-exit below so it fires even when there are no
+  // active matches (e.g. between R32 game days after a match finished >3h ago).
+  const { data: finishedKnockouts } = await supabase
+    .from("matches")
+    .select("match_number, home_team_id, away_team_id, home_score, away_score, home_score_et, away_score_et, penalties_home, penalties_away")
+    .in("stage", ["round_of_32", "round_of_16", "quarterfinal", "semifinal"])
+    .eq("status", "finished")
+    .not("home_team_id", "is", null)
+    .not("away_team_id", "is", null)
+    .not("match_number", "is", null);
+
+  const { data: knockoutTargets } = await supabase
+    .from("matches")
+    .select("id, match_number, stage, home_team_id, away_team_id")
+    .in("stage", ["round_of_16", "quarterfinal", "semifinal", "final", "third_place"]);
+
+  const targetByNumber = new Map(
+    (knockoutTargets ?? []).filter((m) => m.match_number).map((m) => [m.match_number as number, m])
+  );
+  const targetByStage = new Map(
+    (knockoutTargets ?? []).filter((m) => !m.match_number).map((m) => [m.stage as string, m])
+  );
+
+  let promoted = 0;
+
+  for (const fin of finishedKnockouts ?? []) {
+    const num = fin.match_number as number;
+    const progression = BRACKET[num];
+    if (!progression) continue;
+
+    let winnerId: string;
+    let loserId: string;
+    if (fin.penalties_home !== null && fin.penalties_away !== null) {
+      const homeWins = (fin.penalties_home as number) > (fin.penalties_away as number);
+      winnerId = homeWins ? fin.home_team_id : fin.away_team_id;
+      loserId  = homeWins ? fin.away_team_id : fin.home_team_id;
+    } else if (fin.home_score_et !== null && fin.away_score_et !== null) {
+      if (fin.home_score_et === fin.away_score_et) continue;
+      const homeWins = (fin.home_score_et as number) > (fin.away_score_et as number);
+      winnerId = homeWins ? fin.home_team_id : fin.away_team_id;
+      loserId  = homeWins ? fin.away_team_id : fin.home_team_id;
+    } else {
+      if (fin.home_score === null || fin.away_score === null || fin.home_score === fin.away_score) continue;
+      const homeWins = (fin.home_score as number) > (fin.away_score as number);
+      winnerId = homeWins ? fin.home_team_id : fin.away_team_id;
+      loserId  = homeWins ? fin.away_team_id : fin.home_team_id;
+    }
+
+    for (const p of progression) {
+      const target = p.nextNumber
+        ? targetByNumber.get(p.nextNumber)
+        : targetByStage.get(p.nextStage!);
+      if (!target) continue;
+      if (target[p.slot as keyof typeof target]) continue;
+
+      const teamId = p.loser ? loserId : winnerId;
+      const { error } = await supabase
+        .from("matches")
+        .update({ [p.slot]: teamId })
+        .eq("id", target.id);
+      if (!error) promoted++;
+    }
+  }
+
   // Matches we care about: live, recently started, or finished within last 3h
   const since = new Date(now.getTime() - 3 * 60 * 60 * 1000).toISOString();
   const { data: dbMatches } = await supabase
@@ -147,7 +212,7 @@ export async function GET(request: NextRequest) {
       `and(status.eq.finished,updated_at.gte.${since})`
     );
 
-  if (!dbMatches?.length) return Response.json({ synced: 0, scored: 0 });
+  if (!dbMatches?.length) return Response.json({ synced: 0, scored: 0, promoted });
 
   // One API call: yesterday + today to handle UTC edge cases
   const dateFrom = new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
@@ -255,82 +320,13 @@ export async function GET(request: NextRequest) {
 
   if (synced > 0) revalidateTag("scorers", { expire: 86400 });
 
-  // ── Bracket auto-promotion ────────────────────────────────────────────────
-  // Runs every tick: queries all finished knockout matches, determines the
-  // winner from stored scores (using ET/pen if played), and fills the
-  // corresponding slot in the next-round fixture immediately.
-  // Two cheap DB reads + occasional writes — no external API call needed.
-  const KNOCKOUT_STAGES = ["round_of_32", "round_of_16", "quarterfinal", "semifinal", "third_place", "final"];
-
-  const { data: finishedKnockouts } = await supabase
-    .from("matches")
-    .select("match_number, home_team_id, away_team_id, home_score, away_score, home_score_et, away_score_et, penalties_home, penalties_away")
-    .in("stage", ["round_of_32", "round_of_16", "quarterfinal", "semifinal"])
-    .eq("status", "finished")
-    .not("home_team_id", "is", null)
-    .not("away_team_id", "is", null)
-    .not("match_number", "is", null);
-
-  const { data: knockoutTargets } = await supabase
-    .from("matches")
-    .select("id, match_number, stage, home_team_id, away_team_id")
-    .in("stage", ["round_of_16", "quarterfinal", "semifinal", "final", "third_place"]);
-
-  const targetByNumber = new Map(
-    (knockoutTargets ?? []).filter((m) => m.match_number).map((m) => [m.match_number as number, m])
-  );
-  const targetByStage = new Map(
-    (knockoutTargets ?? []).filter((m) => !m.match_number).map((m) => [m.stage as string, m])
-  );
-
-  let promoted = 0;
-
-  for (const fin of finishedKnockouts ?? []) {
-    const num = fin.match_number as number;
-    const progression = BRACKET[num];
-    if (!progression) continue;
-
-    // Determine winner and loser from stored scores (pen > ET > regulation)
-    let winnerId: string;
-    let loserId: string;
-    if (fin.penalties_home !== null && fin.penalties_away !== null) {
-      const homeWins = (fin.penalties_home as number) > (fin.penalties_away as number);
-      winnerId = homeWins ? fin.home_team_id : fin.away_team_id;
-      loserId  = homeWins ? fin.away_team_id : fin.home_team_id;
-    } else if (fin.home_score_et !== null && fin.away_score_et !== null) {
-      if (fin.home_score_et === fin.away_score_et) continue; // awaiting penalty data
-      const homeWins = (fin.home_score_et as number) > (fin.away_score_et as number);
-      winnerId = homeWins ? fin.home_team_id : fin.away_team_id;
-      loserId  = homeWins ? fin.away_team_id : fin.home_team_id;
-    } else {
-      if (fin.home_score === null || fin.away_score === null || fin.home_score === fin.away_score) continue;
-      const homeWins = (fin.home_score as number) > (fin.away_score as number);
-      winnerId = homeWins ? fin.home_team_id : fin.away_team_id;
-      loserId  = homeWins ? fin.away_team_id : fin.home_team_id;
-    }
-
-    for (const p of progression) {
-      const target = p.nextNumber
-        ? targetByNumber.get(p.nextNumber)
-        : targetByStage.get(p.nextStage!);
-      if (!target) continue;
-      if (target[p.slot as keyof typeof target]) continue; // slot already filled
-
-      const teamId = p.loser ? loserId : winnerId;
-      const { error } = await supabase
-        .from("matches")
-        .update({ [p.slot]: teamId })
-        .eq("id", target.id);
-      if (!error) promoted++;
-    }
-  }
-
   // ── Sync knockout team assignments ────────────────────────────────────────
   // Triggers whenever:
   //   (a) the cron is already tracking an active knockout match (live / recently
   //       finished) — so winners are promoted as soon as football-data.org knows, or
   //   (b) a null-team knockout match is coming up within 48 h (normal lookahead).
   // Both cases make one extra API call covering the full remaining schedule.
+  const KNOCKOUT_STAGES = ["round_of_32", "round_of_16", "quarterfinal", "semifinal", "third_place", "final"];
 
   const hasActiveKnockout = (dbMatches ?? []).some((m) =>
     KNOCKOUT_STAGES.includes((m as unknown as { stage: string }).stage)
