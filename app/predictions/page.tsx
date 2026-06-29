@@ -119,7 +119,7 @@ export default async function PredictionsPage({
           </Link>
         </div>
       ) : (
-        STAGE_ORDER.filter((s) => byStage.has(s)).map((stage) => (
+        (tab === "results" ? [...STAGE_ORDER].reverse() : STAGE_ORDER).filter((s) => byStage.has(s)).map((stage) => (
           <section key={`${stage}-${tab}`} className="mb-10">
             <h2 className="mb-3 text-[11px] font-bold uppercase tracking-widest text-emerald-400">
               {STAGE_LABELS[stage as Stage]}
