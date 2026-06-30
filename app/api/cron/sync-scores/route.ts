@@ -59,10 +59,13 @@ function teamsMatch(fdName: string, dbName: string): boolean {
 interface FDTeam  { name: string; shortName: string; tla: string }
 interface FDScoreVal { home: number | null; away: number | null }
 interface FDScore {
-  fullTime:  FDScoreVal;
-  extraTime: FDScoreVal | null;
-  penalties: FDScoreVal | null;
-  duration:  string | null;
+  fullTime:    FDScoreVal;
+  regularTime: FDScoreVal | null; // present only for ET/PSO matches — the true 90-min score.
+                                   // fullTime is unreliable for these (free tier bug: observed
+                                   // fullTime = regularTime + penalties, and it fluctuates between calls).
+  extraTime:   FDScoreVal | null; // goals scored only during the ET period (not cumulative)
+  penalties:   FDScoreVal | null;
+  duration:    string | null;
 }
 interface FDMatch {
   utcDate: string;
@@ -169,7 +172,7 @@ export async function GET(request: NextRequest) {
 
     let winnerId: string;
     let loserId: string;
-    if (fin.penalties_home !== null && fin.penalties_away !== null) {
+    if (fin.penalties_home !== null && fin.penalties_away !== null && fin.penalties_home !== fin.penalties_away) {
       const homeWins = (fin.penalties_home as number) > (fin.penalties_away as number);
       winnerId = homeWins ? fin.home_team_id : fin.away_team_id;
       loserId  = homeWins ? fin.away_team_id : fin.home_team_id;
@@ -247,12 +250,23 @@ export async function GET(request: NextRequest) {
     if (!fd) continue;
 
     const apiStatus    = mapStatus(fd.status);
-    const homeScore    = fd.score?.fullTime?.home  ?? null;  // regulation (90 min)
-    const awayScore    = fd.score?.fullTime?.away  ?? null;
-    const homeScoreEt  = fd.score?.extraTime?.home ?? null;
-    const awayScoreEt  = fd.score?.extraTime?.away ?? null;
-    const penHome      = fd.score?.penalties?.home ?? null;
-    const penAway      = fd.score?.penalties?.away ?? null;
+    // regularTime is the reliable 90-min score for ET/PSO matches; fullTime is only
+    // trustworthy when there's no regularTime (i.e. the match never went past 90 min).
+    const homeScore    = fd.score?.regularTime?.home ?? fd.score?.fullTime?.home ?? null;
+    const awayScore    = fd.score?.regularTime?.away ?? fd.score?.fullTime?.away ?? null;
+    // extraTime holds goals scored only during the ET period — add to regulation for the
+    // cumulative post-ET score (used for AET display and bracket-winner determination).
+    const etGoalsHome  = fd.score?.extraTime?.home ?? null;
+    const etGoalsAway  = fd.score?.extraTime?.away ?? null;
+    const homeScoreEt  = (homeScore !== null && etGoalsHome !== null) ? homeScore + etGoalsHome : null;
+    const awayScoreEt  = (awayScore !== null && etGoalsAway !== null) ? awayScore + etGoalsAway : null;
+    // Free tier doesn't capture sudden-death kicks — a tied value means the data is
+    // incomplete, not that the shootout was a draw. Treat tied penalties as unknown.
+    const penHomeRaw   = fd.score?.penalties?.home ?? null;
+    const penAwayRaw   = fd.score?.penalties?.away ?? null;
+    const penTied      = penHomeRaw !== null && penAwayRaw !== null && penHomeRaw === penAwayRaw;
+    const penHome      = penTied ? null : penHomeRaw;
+    const penAway      = penTied ? null : penAwayRaw;
     const duration     = fd.score?.duration ?? null;
 
     // If kickoff has passed but API still says scheduled (TIMED), treat as live
