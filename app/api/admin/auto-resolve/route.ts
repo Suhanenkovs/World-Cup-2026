@@ -67,10 +67,30 @@ export async function POST(request: NextRequest) {
       ? [finalMatch.homeTeam.name, finalMatch.awayTeam.name]
       : [];
 
-  // Golden Boot — top scorer name + goals
-  const topScorer = scorersJson.scorers?.[0];
-  const topScorerName: string | null = topScorer?.player?.name ?? null;
+  // Golden Boot — apply FIFA tiebreakers: goals → assists → fewest matches played
+  interface FDScorerEntry {
+    player: { name: string };
+    goals: number;
+    assists: number | null;
+    playedMatches: number | null;
+  }
+  // FIFA Golden Boot tiebreakers: goals → assists → fewest minutes played
+  // Minutes aren't available from the FD free tier — ties beyond assists are left
+  // for manual resolution via the admin panel.
+  const sortedScorers = [...(scorersJson.scorers ?? [] as FDScorerEntry[])].sort(
+    (a: FDScorerEntry, b: FDScorerEntry) =>
+      b.goals - a.goals ||
+      (b.assists ?? 0) - (a.assists ?? 0)
+  );
+  const topScorer: FDScorerEntry | undefined = sortedScorers[0];
   const topScorerGoals: number | null = topScorer?.goals ?? null;
+  // Players tied on goals+assists — minutes played needed to break further; skip auto-resolve
+  const goldBootWinners = sortedScorers.filter((s: FDScorerEntry) =>
+    s.goals === topScorer?.goals &&
+    (s.assists ?? 0) === (topScorer?.assists ?? 0)
+  );
+  const topScorerName: string | null =
+    goldBootWinners.length > 0 ? goldBootWinners.map((s: FDScorerEntry) => s.player.name).join("|") : null;
 
   // Total goals in tournament
   const totalGoals = finished.reduce(
@@ -111,7 +131,9 @@ export async function POST(request: NextRequest) {
     if (q.includes("reach the final") && finalists.length === 2)
       return { answer: finalists.join("|"), multi: finalists };
     if (q.includes("golden boot") || q.includes("top scorer"))
-      return topScorerName ? { answer: topScorerName } : null;
+      return topScorerName
+        ? { answer: topScorerName, multi: goldBootWinners.map((s: FDScorerEntry) => s.player.name) }
+        : null;
     if (q.includes("how many goals will the top scorer") && topScorerGoals !== null)
       return { answer: String(topScorerGoals) };
     if (q.includes("total number of goals") && totalGoals > 0)

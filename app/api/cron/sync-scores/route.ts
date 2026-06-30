@@ -208,7 +208,7 @@ export async function GET(request: NextRequest) {
   const since = new Date(now.getTime() - 3 * 60 * 60 * 1000).toISOString();
   const { data: dbMatches } = await supabase
     .from("matches")
-    .select("id, stage, status, home_score, away_score, score_duration, scheduled_at, home_team:home_team_id(name), away_team:away_team_id(name)")
+    .select("id, stage, status, home_score, away_score, score_duration, penalties_home, scheduled_at, home_team:home_team_id(name), away_team:away_team_id(name)")
     .or(
       `status.eq.live,` +
       `and(status.eq.scheduled,scheduled_at.lte.${now.toISOString()}),` +
@@ -281,8 +281,11 @@ export async function GET(request: NextRequest) {
       // Write regulation score + ET/pen scores + status together.
       // Also re-writes when AET/pen data arrives after the match was already
       // marked finished on regulation score alone (football-data.org can lag).
-      const durationChanged = duration !== null && duration !== (db as unknown as { score_duration: string | null }).score_duration;
-      if (db.status !== "finished" || db.home_score !== homeScore || db.away_score !== awayScore || durationChanged) {
+      const dbCast = db as unknown as { score_duration: string | null; penalties_home: number | null };
+      const durationChanged = duration !== null && duration !== dbCast.score_duration;
+      // Catches the case where the API initially returned tied/null penalties but later corrects them
+      const penChanged = penHome !== null && penHome !== dbCast.penalties_home;
+      if (db.status !== "finished" || db.home_score !== homeScore || db.away_score !== awayScore || durationChanged || penChanged) {
         await supabase
           .from("matches")
           .update({
@@ -337,90 +340,6 @@ export async function GET(request: NextRequest) {
 
   if (synced > 0) revalidateTag("scorers", { expire: 86400 });
 
-  // ── Sync knockout team assignments ────────────────────────────────────────
-  // Triggers whenever:
-  //   (a) the cron is already tracking an active knockout match (live / recently
-  //       finished) — so winners are promoted as soon as football-data.org knows, or
-  //   (b) a null-team knockout match is coming up within 48 h (normal lookahead).
-  // Both cases make one extra API call covering the full remaining schedule.
-  const KNOCKOUT_STAGES = ["round_of_32", "round_of_16", "quarterfinal", "semifinal", "third_place", "final"];
-
-  const hasActiveKnockout = (dbMatches ?? []).some((m) =>
-    KNOCKOUT_STAGES.includes((m as unknown as { stage: string }).stage)
-  );
-
-  const in48h = new Date(now.getTime() + 48 * 60 * 60 * 1000).toISOString();
-  const { data: missingTeamMatches } = hasActiveKnockout
-    ? await supabase
-        .from("matches")
-        .select("id")
-        .in("stage", KNOCKOUT_STAGES)
-        .or("home_team_id.is.null,away_team_id.is.null")
-        .gt("scheduled_at", now.toISOString())
-        .limit(1)
-    : await supabase
-        .from("matches")
-        .select("id")
-        .in("stage", KNOCKOUT_STAGES)
-        .or("home_team_id.is.null,away_team_id.is.null")
-        .gt("scheduled_at", now.toISOString())
-        .lte("scheduled_at", in48h)
-        .limit(1);
-
-  let teamsAssigned = 0;
-  if (missingTeamMatches?.length) {
-    const knockoutRes = await fetch(
-      `${FD_BASE}/competitions/WC/matches?dateFrom=${now.toISOString().slice(0, 10)}&dateTo=2026-07-20`,
-      { headers: { "X-Auth-Token": process.env.FOOTBALL_DATA_API_KEY! } }
-    );
-    if (knockoutRes.ok) {
-      const allFuture: FDMatch[] = (await knockoutRes.json()).matches ?? [];
-
-      // Fetch teams table for name → id lookup
-      const { data: allTeams } = await supabase.from("teams").select("id, name");
-      const teamByNorm = new Map((allTeams ?? []).map((t) => [normalize(t.name), t.id]));
-      const resolveTeam = (fdTeam: FDTeam): string | null => {
-        if (!fdTeam?.name) return null;
-        return (
-          teamByNorm.get(normalize(fdTeam.name)) ??
-          teamByNorm.get(normalize(fdTeam.shortName ?? "")) ??
-          teamByNorm.get(normalize(fdTeam.tla ?? "")) ??
-          null
-        );
-      };
-
-      // Fetch all knockout matches with null teams from DB
-      const { data: nullTeamMatches } = await supabase
-        .from("matches")
-        .select("id, scheduled_at, home_team_id, away_team_id")
-        .in("stage", KNOCKOUT_STAGES)
-        .or("home_team_id.is.null,away_team_id.is.null");
-
-      const dbByTime = new Map(
-        (nullTeamMatches ?? []).map((m) => [m.scheduled_at.replace("+00:00", "Z"), m])
-      );
-
-      for (const fdM of allFuture) {
-        const dbM = dbByTime.get(fdM.utcDate);
-        if (!dbM) continue;
-
-        const patch: Record<string, string> = {};
-        if (!dbM.home_team_id) {
-          const id = resolveTeam(fdM.homeTeam);
-          if (id) patch.home_team_id = id;
-        }
-        if (!dbM.away_team_id) {
-          const id = resolveTeam(fdM.awayTeam);
-          if (id) patch.away_team_id = id;
-        }
-        if (!Object.keys(patch).length) continue;
-
-        const { error } = await supabase.from("matches").update(patch).eq("id", dbM.id);
-        if (!error) teamsAssigned++;
-      }
-    }
-  }
-
-  return Response.json({ synced, scored, checked: dbMatches.length, promoted, teamsAssigned });
+  return Response.json({ synced, scored, checked: dbMatches.length, promoted });
 }
 

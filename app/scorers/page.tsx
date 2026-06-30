@@ -27,12 +27,12 @@ async function fetchScorers(): Promise<FDScorer[]> {
 export default async function ScorersPage() {
   const raw = await fetchScorers();
 
-  // Sort: goals desc → assists desc → penalties asc → games played asc
+  // FIFA Golden Boot tiebreakers: goals desc → assists desc → fewest minutes played
+  // Minutes played aren't available from the FD free tier, so ties beyond assists
+  // are left unresolved and handled manually.
   const scorers = [...raw].sort((a, b) =>
     b.goals - a.goals ||
-    (b.assists ?? 0) - (a.assists ?? 0) ||
-    (a.penalties ?? 0) - (b.penalties ?? 0) ||
-    (a.playedMatches ?? 0) - (b.playedMatches ?? 0)
+    (b.assists ?? 0) - (a.assists ?? 0)
   );
 
   // Show top 10, but always include everyone tied with the 10th player
@@ -43,7 +43,7 @@ export default async function ScorersPage() {
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-8">
-      <div className="flex items-baseline justify-between mb-6">
+      <div className="flex items-baseline justify-between mb-4">
         <h1 className="text-2xl font-bold text-white">Tournament Top Scorers</h1>
         {scorers.length > 0 && (
           <span className="text-xs text-gray-500">
@@ -51,6 +51,11 @@ export default async function ScorersPage() {
           </span>
         )}
       </div>
+      {scorers.length > 0 && (
+        <p className="text-xs text-gray-500 mb-4">
+          Golden Boot tiebreakers: goals → assists → fewest minutes played (manual if needed)
+        </p>
+      )}
 
       {scorers.length === 0 ? (
         <p className="text-gray-500 text-sm py-8 text-center">
@@ -67,14 +72,18 @@ export default async function ScorersPage() {
                   <th className="px-3 py-2.5 text-left hidden sm:table-cell">Team</th>
                   <th className="px-3 py-2.5 text-right w-12">Gls</th>
                   <th className="px-3 py-2.5 text-right w-12">Ast</th>
-                  <th className="px-3 py-2.5 text-right w-12 hidden sm:table-cell">Pen</th>
                   <th className="px-3 py-2.5 text-right w-12 hidden sm:table-cell">MP</th>
+                  <th className="px-3 py-2.5 text-right w-12 hidden sm:table-cell">Pen</th>
                 </tr>
               </thead>
               <tbody>
                 {displayed.map((s, i) => {
                   const flagSrc = getFlagUrl(s.team.name) ?? getFlagUrl(s.team.shortName);
-                  const rank = scorers.filter((x, j) => j < i && x.goals > s.goals).length + 1;
+                  const rank = scorers.filter((x) => {
+                    if (x.goals !== s.goals) return x.goals > s.goals;
+                    if ((x.assists ?? 0) !== (s.assists ?? 0)) return (x.assists ?? 0) > (s.assists ?? 0);
+                    return false; // tied on goals+assists — same rank until manual resolution
+                  }).length + 1;
                   return (
                     <tr key={s.player.id} className={`border-b border-white/5 last:border-0 ${i % 2 !== 0 ? "bg-white/[0.02]" : ""}`}>
                       <td className="px-3 py-2.5 text-gray-500 font-mono text-xs">{rank}</td>
@@ -101,8 +110,8 @@ export default async function ScorersPage() {
                       </td>
                       <td className="px-3 py-2.5 text-right font-bold text-emerald-400">{s.goals}</td>
                       <td className="px-3 py-2.5 text-right text-gray-300">{s.assists ?? 0}</td>
-                      <td className="px-3 py-2.5 text-right text-gray-500 hidden sm:table-cell">{s.penalties ?? 0}</td>
                       <td className="px-3 py-2.5 text-right text-gray-500 hidden sm:table-cell">{s.playedMatches ?? 0}</td>
+                      <td className="px-3 py-2.5 text-right text-gray-500 hidden sm:table-cell">{s.penalties ?? 0}</td>
                     </tr>
                   );
                 })}
