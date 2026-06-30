@@ -16,7 +16,7 @@ function Flag({ team }: { team: Team | null | undefined }) {
   return <img src={src} alt={team.name} className="w-5 h-3.5 object-cover rounded-sm border border-gray-700 shrink-0" />;
 }
 
-function TeamRow({ team, score }: { team: Team | null | undefined; score: number | null }) {
+function TeamRow({ team, score, won }: { team: Team | null | undefined; score: number | null; won?: boolean }) {
   return (
     <div className="flex items-center gap-1.5 min-w-0">
       <Flag team={team} />
@@ -24,7 +24,7 @@ function TeamRow({ team, score }: { team: Team | null | undefined; score: number
         {team?.short_name ?? team?.name ?? "TBD"}
       </span>
       {score !== null && (
-        <span className="ml-auto text-xs font-bold text-white shrink-0 pl-1">{score}</span>
+        <span className={`ml-auto text-xs font-bold shrink-0 pl-1 ${won ? "text-emerald-400" : "text-white"}`}>{score}</span>
       )}
     </div>
   );
@@ -32,15 +32,25 @@ function TeamRow({ team, score }: { team: Team | null | undefined; score: number
 
 function MatchCard({ match, highlight }: { match: MatchWithTeams | undefined; highlight?: boolean }) {
   const hasScore = match && match.home_score !== null;
+  const decidedByPens = match?.score_duration === "PENALTY_SHOOTOUT";
+  const homeWonPens = decidedByPens && (match!.penalties_home ?? 0) > (match!.penalties_away ?? 0);
   return (
     <div className={`w-36 rounded-md border shrink-0 overflow-hidden
       ${match ? "bg-gray-900/50 border-white/10" : "bg-gray-900/30 border-gray-800/40"}
       ${highlight ? "ring-1 ring-amber-500/60" : ""}`}>
       {match ? (
         <div className="px-2.5 py-1.5 flex flex-col gap-0.5">
-          <TeamRow team={match.home_team} score={hasScore ? match.home_score : null} />
+          <TeamRow team={match.home_team} score={hasScore ? match.home_score : null} won={decidedByPens && homeWonPens} />
           <div className="border-t border-gray-800" />
-          <TeamRow team={match.away_team} score={hasScore ? match.away_score : null} />
+          <TeamRow team={match.away_team} score={hasScore ? match.away_score : null} won={decidedByPens && !homeWonPens} />
+          {decidedByPens && (
+            <span className="text-[9px] text-amber-400 font-semibold text-center mt-0.5">
+              pens {match!.penalties_home}–{match!.penalties_away}
+            </span>
+          )}
+          {match?.score_duration === "EXTRA_TIME" && (
+            <span className="text-[9px] text-amber-400 font-semibold text-center mt-0.5">AET</span>
+          )}
         </div>
       ) : (
         <div className="px-2.5 py-1.5 flex flex-col gap-0.5">
@@ -279,9 +289,19 @@ export default async function BracketPage() {
                     {/* Score / vs */}
                     <div className="text-center shrink-0 w-12">
                       {hasScore ? (
-                        <span className={`font-mono font-bold text-sm ${isLive ? "text-emerald-400" : "text-white"}`}>
-                          {m.home_score}–{m.away_score}
-                        </span>
+                        <div className="flex flex-col items-center gap-0.5">
+                          <span className={`font-mono font-bold text-sm ${isLive ? "text-emerald-400" : "text-white"}`}>
+                            {m.home_score}–{m.away_score}
+                          </span>
+                          {m.score_duration === "PENALTY_SHOOTOUT" && (
+                            <span className="text-[9px] text-amber-400 font-semibold leading-none">
+                              pens {m.penalties_home}–{m.penalties_away}
+                            </span>
+                          )}
+                          {m.score_duration === "EXTRA_TIME" && (
+                            <span className="text-[9px] text-amber-400 font-semibold leading-none">AET</span>
+                          )}
+                        </div>
                       ) : isLive ? (
                         <span className="text-[9px] bg-red-600 text-white px-1 py-0.5 rounded-full animate-pulse">LIVE</span>
                       ) : (

@@ -213,6 +213,15 @@ export default function PredictionsGrid({ matches, predictions, stage, userId, i
                     <span className="font-mono font-bold text-white text-xl leading-none">
                       {match.home_score}–{match.away_score}
                     </span>
+                    {match.score_duration === "PENALTY_SHOOTOUT" ? (
+                      <span className="text-[10px] text-amber-400 font-semibold">
+                        pens {match.penalties_home}–{match.penalties_away}
+                      </span>
+                    ) : match.score_duration === "EXTRA_TIME" ? (
+                      <span className="text-[10px] text-amber-400 font-semibold">
+                        AET {match.home_score_et}–{match.away_score_et}
+                      </span>
+                    ) : null}
                     {pred ? (
                       <span className="text-[10px] text-gray-500 font-mono">pick: {pred.pred_home}–{pred.pred_away}</span>
                     ) : (

@@ -205,7 +205,7 @@ export async function GET(request: NextRequest) {
   const since = new Date(now.getTime() - 3 * 60 * 60 * 1000).toISOString();
   const { data: dbMatches } = await supabase
     .from("matches")
-    .select("id, stage, status, home_score, away_score, scheduled_at, home_team:home_team_id(name), away_team:away_team_id(name)")
+    .select("id, stage, status, home_score, away_score, score_duration, scheduled_at, home_team:home_team_id(name), away_team:away_team_id(name)")
     .or(
       `status.eq.live,` +
       `and(status.eq.scheduled,scheduled_at.lte.${now.toISOString()}),` +
@@ -264,8 +264,11 @@ export async function GET(request: NextRequest) {
     if ((STATUS_RANK[status] ?? 0) < (STATUS_RANK[db.status] ?? 0)) continue;
 
     if (status === "finished" && homeScore !== null && awayScore !== null) {
-      // Write regulation score + ET/pen scores + status together
-      if (db.status !== "finished" || db.home_score !== homeScore || db.away_score !== awayScore) {
+      // Write regulation score + ET/pen scores + status together.
+      // Also re-writes when AET/pen data arrives after the match was already
+      // marked finished on regulation score alone (football-data.org can lag).
+      const durationChanged = duration !== null && duration !== (db as unknown as { score_duration: string | null }).score_duration;
+      if (db.status !== "finished" || db.home_score !== homeScore || db.away_score !== awayScore || durationChanged) {
         await supabase
           .from("matches")
           .update({
