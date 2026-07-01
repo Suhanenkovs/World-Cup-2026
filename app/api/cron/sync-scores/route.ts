@@ -338,7 +338,10 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  if (synced > 0) revalidateTag("scorers", { expire: 86400 });
+  // Invalidate the scorers page cache whenever matches are active — scorers can
+  // change during a live match even when our DB score hasn't updated yet.
+  // { expire: 0 } = immediate expiration in Next.js 16 (expire: N extends cache life).
+  revalidateTag("scorers", { expire: 0 });
 
   return Response.json({ synced, scored, checked: dbMatches.length, promoted });
 }
