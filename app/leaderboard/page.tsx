@@ -55,6 +55,11 @@ export default async function LeaderboardPage() {
             </div>
           ))}
         </div>
+        {prizes.adminCost > 0 && (
+          <p className="text-xs text-gray-500 -mt-4 mb-6">
+            Total pot €{prizes.pot} — €{prizes.adminCost} administrative costs deducted.
+          </p>
+        )}
       )}
 
       <div className="bg-gray-900/50 backdrop-blur-sm border border-white/10 rounded-xl overflow-hidden">
