@@ -39,35 +39,39 @@ function MatchCard({ match, highlight }: { match: MatchWithTeams | undefined; hi
   const awayWonET = decidedByET && (match!.away_score_et ?? 0) > (match!.home_score_et ?? 0);
   const hasETScores = match?.home_score_et !== null && match?.home_score_et !== undefined
     && match?.away_score_et !== null && match?.away_score_et !== undefined;
-  return (
-    <div className={`w-36 rounded-md border shrink-0 overflow-hidden
-      ${match ? "bg-gray-900/50 border-white/10" : "bg-gray-900/30 border-gray-800/40"}
-      ${highlight ? "ring-1 ring-amber-500/60" : ""}`}>
-      {match ? (
-        <div className="px-2.5 py-1.5 flex flex-col gap-0.5">
-          <TeamRow team={match.home_team} score={hasScore ? match.home_score : null} won={(decidedByPens && homeWonPens) || homeWonET} />
-          <div className="border-t border-gray-800" />
-          <TeamRow team={match.away_team} score={hasScore ? match.away_score : null} won={(decidedByPens && !homeWonPens) || awayWonET} />
-          {decidedByPens && (
-            <span className="text-[9px] text-amber-400 font-semibold text-center mt-0.5">
-              pens {match!.penalties_home}–{match!.penalties_away}
-            </span>
-          )}
-          {decidedByET && (
-            <span className="text-[9px] text-amber-400 font-semibold text-center mt-0.5">
-              {hasETScores ? `${match!.home_score_et}–${match!.away_score_et} AET` : "AET"}
-            </span>
-          )}
-        </div>
-      ) : (
-        <div className="px-2.5 py-1.5 flex flex-col gap-0.5">
-          <span className="text-gray-700 text-[10px]">TBD</span>
-          <div className="border-t border-gray-800" />
-          <span className="text-gray-700 text-[10px]">TBD</span>
-        </div>
+
+  const cls = `w-36 rounded-md border shrink-0 overflow-hidden
+    ${match ? "bg-gray-900/50 border-white/10 hover:border-white/30 transition-colors" : "bg-gray-900/30 border-gray-800/40"}
+    ${highlight ? "ring-1 ring-amber-500/60" : ""}`;
+
+  const content = match ? (
+    <div className="px-2.5 py-1.5 flex flex-col gap-0.5">
+      <TeamRow team={match.home_team} score={hasScore ? match.home_score : null} won={(decidedByPens && homeWonPens) || homeWonET} />
+      <div className="border-t border-gray-800" />
+      <TeamRow team={match.away_team} score={hasScore ? match.away_score : null} won={(decidedByPens && !homeWonPens) || awayWonET} />
+      {decidedByPens && (
+        <span className="text-[9px] text-amber-400 font-semibold text-center mt-0.5">
+          pens {match.penalties_home}–{match.penalties_away}
+        </span>
+      )}
+      {decidedByET && (
+        <span className="text-[9px] text-amber-400 font-semibold text-center mt-0.5">
+          {hasETScores ? `${match.home_score_et}–${match.away_score_et} AET` : "AET"}
+        </span>
       )}
     </div>
+  ) : (
+    <div className="px-2.5 py-1.5 flex flex-col gap-0.5">
+      <span className="text-gray-700 text-[10px]">TBD</span>
+      <div className="border-t border-gray-800" />
+      <span className="text-gray-700 text-[10px]">TBD</span>
+    </div>
   );
+
+  if (match) {
+    return <Link href={`/matches/${match.id}`} className={cls}>{content}</Link>;
+  }
+  return <div className={cls}>{content}</div>;
 }
 
 // ── Desktop bracket components ─────────────────────────────────────────────
