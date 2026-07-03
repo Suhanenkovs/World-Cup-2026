@@ -42,24 +42,26 @@ export default async function LeaderboardPage() {
       <h1 className="text-2xl font-bold text-white mb-2">Leaderboard</h1>
 
       {prizes && (
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
-          {[
-            { label: "Prize pool", value: `€${prizes.prizePool}`, accent: "text-white" },
-            { label: "1st place", value: `€${prizes.first}`, accent: "text-yellow-400" },
-            { label: "2nd place", value: `€${prizes.second}`, accent: "text-gray-300" },
-            { label: "3rd place", value: `€${prizes.third}`, accent: "text-amber-600" },
-          ].map(({ label, value, accent }) => (
-            <div key={label} className="bg-gray-900/50 backdrop-blur-sm border border-white/10 rounded-xl px-4 py-3 text-center">
-              <div className="text-xs text-gray-500">{label}</div>
-              <div className={`text-xl font-bold mt-0.5 ${accent}`}>{value}</div>
-            </div>
-          ))}
-        </div>
-        {prizes.adminCost > 0 && (
-          <p className="text-xs text-gray-500 -mt-4 mb-6">
-            Total pot €{prizes.pot} — €{prizes.adminCost} administrative costs deducted.
-          </p>
-        )}
+        <>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-3">
+            {[
+              { label: "Prize pool", value: `€${prizes.prizePool}`, accent: "text-white" },
+              { label: "1st place", value: `€${prizes.first}`, accent: "text-yellow-400" },
+              { label: "2nd place", value: `€${prizes.second}`, accent: "text-gray-300" },
+              { label: "3rd place", value: `€${prizes.third}`, accent: "text-amber-600" },
+            ].map(({ label, value, accent }) => (
+              <div key={label} className="bg-gray-900/50 backdrop-blur-sm border border-white/10 rounded-xl px-4 py-3 text-center">
+                <div className="text-xs text-gray-500">{label}</div>
+                <div className={`text-xl font-bold mt-0.5 ${accent}`}>{value}</div>
+              </div>
+            ))}
+          </div>
+          {prizes.adminCost > 0 && (
+            <p className="text-xs text-gray-500 mb-6">
+              Total pot €{prizes.pot} — €{prizes.adminCost} administrative costs deducted.
+            </p>
+          )}
+        </>
       )}
 
       <div className="bg-gray-900/50 backdrop-blur-sm border border-white/10 rounded-xl overflow-hidden">
