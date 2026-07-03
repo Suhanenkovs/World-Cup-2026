@@ -36,13 +36,17 @@ export function getPrizeAmounts(
   entryFee: number,
   winnerPct: number,
   secondPct: number,
-  thirdPct: number
+  thirdPct: number,
+  adminCost: number = 0
 ) {
   const pot = participantCount * entryFee;
+  const prizePool = Math.max(0, pot - adminCost);
   return {
     pot,
-    first: Math.round((pot * winnerPct) / 100),
-    second: Math.round((pot * secondPct) / 100),
-    third: Math.round((pot * thirdPct) / 100),
+    adminCost,
+    prizePool,
+    first:  Math.round((prizePool * winnerPct)  / 100),
+    second: Math.round((prizePool * secondPct)  / 100),
+    third:  Math.round((prizePool * thirdPct)   / 100),
   };
 }

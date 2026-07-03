@@ -18,7 +18,7 @@ export default async function LeaderboardPage() {
   const paidCount = (rows ?? []).filter((r) => r.paid).length;
   const entryFee = config?.entry_fee ?? 20;
   const prizes = config
-    ? getPrizeAmounts(paidCount, entryFee, config.winner_pct, config.second_pct, config.third_pct)
+    ? getPrizeAmounts(paidCount, entryFee, config.winner_pct, config.second_pct, config.third_pct, config.admin_cost ?? 0)
     : null;
 
   // Sort: total desc, then match_points as tiebreaker
@@ -44,7 +44,7 @@ export default async function LeaderboardPage() {
       {prizes && (
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
           {[
-            { label: "Prize pool", value: `€${prizes.pot}`, accent: "text-white" },
+            { label: "Prize pool", value: `€${prizes.prizePool}`, accent: "text-white" },
             { label: "1st place", value: `€${prizes.first}`, accent: "text-yellow-400" },
             { label: "2nd place", value: `€${prizes.second}`, accent: "text-gray-300" },
             { label: "3rd place", value: `€${prizes.third}`, accent: "text-amber-600" },

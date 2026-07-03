@@ -6,6 +6,7 @@ import type { Profile, BonusQuestion } from "@/types/database";
 interface PrizeConfig {
   id: number;
   entry_fee: number;
+  admin_cost: number;
   winner_pct: number;
   second_pct: number;
   third_pct: number;
@@ -58,6 +59,7 @@ export default function AdminPanel({ players, questions, prizeConfig, tab }: Pro
 
   // Prize config editing state
   const [entryFee, setEntryFee] = useState(String(prizeConfig.entry_fee));
+  const [adminCost, setAdminCost] = useState(String(prizeConfig.admin_cost ?? 0));
   const [places, setPlaces] = useState<{ pct: string }[]>(
     configToPlaces(prizeConfig).map((p) => ({ pct: String(p.pct) }))
   );
@@ -65,7 +67,9 @@ export default function AdminPanel({ players, questions, prizeConfig, tab }: Pro
 
   const paidCount = players.filter((p) => p.paid).length;
   const fee = parseFloat(entryFee) || 0;
+  const cost = parseFloat(adminCost) || 0;
   const pot = paidCount * fee;
+  const prizePool = Math.max(0, pot - cost);
   const totalPct = places.map((p) => parseFloat(p.pct) || 0).reduce((s, n) => s + n, 0);
   const pctOk = Math.round(totalPct) === 100;
 
@@ -87,6 +91,7 @@ export default function AdminPanel({ players, questions, prizeConfig, tab }: Pro
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         entry_fee: parseFloat(entryFee),
+        admin_cost: parseFloat(adminCost) || 0,
         places: places.map((p) => ({ pct: parseFloat(p.pct) || 0 })),
       }),
     });
@@ -306,21 +311,33 @@ export default function AdminPanel({ players, questions, prizeConfig, tab }: Pro
         <h2 className="text-lg font-semibold text-white mb-4">Prize Pool</h2>
 
         {/* Summary row */}
-        <div className="grid grid-cols-3 gap-3 text-center mb-6">
+        <div className="grid grid-cols-4 gap-3 text-center mb-6">
           <Stat label="Paid players" value={`${paidCount} / ${players.length}`} />
           <Stat label="Total pot" value={`€${pot.toFixed(2)}`} accent="text-yellow-400" />
-          <Stat label="% allocated" value={`${totalPct.toFixed(1)}%`} accent={pctOk ? "text-emerald-400" : "text-red-400"} />
+          <Stat label="Admin costs" value={`€${cost.toFixed(2)}`} accent={cost > 0 ? "text-red-400" : "text-gray-500"} />
+          <Stat label="Prize pool" value={`€${prizePool.toFixed(2)}`} accent="text-emerald-400" />
         </div>
 
-        {/* Entry fee */}
-        <div className="mb-4">
-          <label className="text-xs text-gray-400 block mb-1">Entry fee (€)</label>
-          <input
-            type="text" inputMode="decimal"
-            value={entryFee}
-            onChange={(e) => setEntryFee(e.target.value.replace(/[^0-9.]/g, ""))}
-            className="w-32 bg-gray-800 border border-gray-700 rounded-lg px-3 py-1.5 text-white text-sm focus:outline-none focus:border-amber-500"
-          />
+        {/* Entry fee + admin costs */}
+        <div className="flex gap-4 mb-4">
+          <div>
+            <label className="text-xs text-gray-400 block mb-1">Entry fee (€)</label>
+            <input
+              type="text" inputMode="decimal"
+              value={entryFee}
+              onChange={(e) => setEntryFee(e.target.value.replace(/[^0-9.]/g, ""))}
+              className="w-32 bg-gray-800 border border-gray-700 rounded-lg px-3 py-1.5 text-white text-sm focus:outline-none focus:border-amber-500"
+            />
+          </div>
+          <div>
+            <label className="text-xs text-gray-400 block mb-1">Administrative costs (€)</label>
+            <input
+              type="text" inputMode="decimal"
+              value={adminCost}
+              onChange={(e) => setAdminCost(e.target.value.replace(/[^0-9.]/g, ""))}
+              className="w-32 bg-gray-800 border border-gray-700 rounded-lg px-3 py-1.5 text-white text-sm focus:outline-none focus:border-amber-500"
+            />
+          </div>
         </div>
 
         {/* Prize places */}
@@ -328,7 +345,7 @@ export default function AdminPanel({ players, questions, prizeConfig, tab }: Pro
           <div className="text-xs text-gray-400 mb-2">Prize places</div>
           <div className="flex flex-col gap-2">
             {places.map((p, i) => {
-              const prize = Math.round(pot * (parseFloat(p.pct) || 0) / 100);
+              const prize = Math.round(prizePool * (parseFloat(p.pct) || 0) / 100);
               return (
                 <div key={i} className="flex items-center gap-3">
                   <span className="text-xs text-gray-400 w-6 shrink-0">{PLACE_LABELS[i]}</span>

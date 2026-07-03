@@ -11,8 +11,9 @@ export async function PATCH(request: NextRequest) {
   if (!profile?.is_admin) return Response.json({ error: "Forbidden" }, { status: 403 });
 
   const body = await request.json();
-  const { entry_fee, places } = body as {
+  const { entry_fee, admin_cost, places } = body as {
     entry_fee: number;
+    admin_cost: number;
     places: { pct: number }[];
   };
 
@@ -34,6 +35,7 @@ export async function PATCH(request: NextRequest) {
     .from("prize_config")
     .update({
       entry_fee,
+      admin_cost: admin_cost ?? 0,
       winner_pct: pcts[0],
       second_pct: pcts[1],
       third_pct:  pcts[2],

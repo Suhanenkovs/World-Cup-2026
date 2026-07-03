@@ -10,6 +10,7 @@ type Tab = "participants" | "bonus" | "matches";
 interface PrizeConfig {
   id: number;
   entry_fee: number;
+  admin_cost: number;
   winner_pct: number;
   second_pct: number;
   third_pct: number;

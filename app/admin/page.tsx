@@ -36,7 +36,7 @@ export default async function AdminPage() {
       <AdminTabs
         players={playersWithEmail as any}
         questions={questions ?? []}
-        prizeConfig={config ?? { entry_fee: 20, winner_pct: 60, second_pct: 30, third_pct: 10, fourth_pct: 0, fifth_pct: 0, id: 1 }}
+        prizeConfig={config ?? { entry_fee: 20, admin_cost: 0, winner_pct: 60, second_pct: 30, third_pct: 10, fourth_pct: 0, fifth_pct: 0, id: 1 }}
         matches={(matches ?? []) as MatchWithTeams[]}
       />
     </div>
