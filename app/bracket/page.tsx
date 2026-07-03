@@ -34,26 +34,29 @@ function MatchCard({ match, highlight }: { match: MatchWithTeams | undefined; hi
   const hasScore = match && match.home_score !== null;
   const decidedByPens = match?.score_duration === "PENALTY_SHOOTOUT";
   const decidedByET = match?.score_duration === "EXTRA_TIME";
-  const displayHomeScore = hasScore ? (match!.home_score_et ?? match!.home_score) : null;
-  const displayAwayScore = hasScore ? (match!.away_score_et ?? match!.away_score) : null;
   const homeWonPens = decidedByPens && (match!.penalties_home ?? 0) > (match!.penalties_away ?? 0);
-  const homeWonET = decidedByET && (displayHomeScore ?? 0) > (displayAwayScore ?? 0);
+  const homeWonET = decidedByET && (match!.home_score_et ?? 0) > (match!.away_score_et ?? 0);
+  const awayWonET = decidedByET && (match!.away_score_et ?? 0) > (match!.home_score_et ?? 0);
+  const hasETScores = match?.home_score_et !== null && match?.home_score_et !== undefined
+    && match?.away_score_et !== null && match?.away_score_et !== undefined;
   return (
     <div className={`w-36 rounded-md border shrink-0 overflow-hidden
       ${match ? "bg-gray-900/50 border-white/10" : "bg-gray-900/30 border-gray-800/40"}
       ${highlight ? "ring-1 ring-amber-500/60" : ""}`}>
       {match ? (
         <div className="px-2.5 py-1.5 flex flex-col gap-0.5">
-          <TeamRow team={match.home_team} score={displayHomeScore} won={(decidedByPens && homeWonPens) || homeWonET} />
+          <TeamRow team={match.home_team} score={hasScore ? match.home_score : null} won={(decidedByPens && homeWonPens) || homeWonET} />
           <div className="border-t border-gray-800" />
-          <TeamRow team={match.away_team} score={displayAwayScore} won={(decidedByPens && !homeWonPens) || (decidedByET && (displayAwayScore ?? 0) > (displayHomeScore ?? 0))} />
+          <TeamRow team={match.away_team} score={hasScore ? match.away_score : null} won={(decidedByPens && !homeWonPens) || awayWonET} />
           {decidedByPens && (
             <span className="text-[9px] text-amber-400 font-semibold text-center mt-0.5">
               pens {match!.penalties_home}–{match!.penalties_away}
             </span>
           )}
-          {match?.score_duration === "EXTRA_TIME" && (
-            <span className="text-[9px] text-amber-400 font-semibold text-center mt-0.5">AET</span>
+          {decidedByET && (
+            <span className="text-[9px] text-amber-400 font-semibold text-center mt-0.5">
+              {hasETScores ? `${match!.home_score_et}–${match!.away_score_et} AET` : "AET"}
+            </span>
           )}
         </div>
       ) : (
@@ -295,7 +298,7 @@ export default async function BracketPage() {
                       {hasScore ? (
                         <div className="flex flex-col items-center gap-0.5">
                           <span className={`font-mono font-bold text-sm ${isLive ? "text-emerald-400" : "text-white"}`}>
-                            {m.home_score_et ?? m.home_score}–{m.away_score_et ?? m.away_score}
+                            {m.home_score}–{m.away_score}
                           </span>
                           {m.score_duration === "PENALTY_SHOOTOUT" && (
                             <span className="text-[9px] text-amber-400 font-semibold leading-none">
@@ -303,7 +306,11 @@ export default async function BracketPage() {
                             </span>
                           )}
                           {m.score_duration === "EXTRA_TIME" && (
-                            <span className="text-[9px] text-amber-400 font-semibold leading-none">AET</span>
+                            <span className="text-[9px] text-amber-400 font-semibold leading-none">
+                              {m.home_score_et !== null && m.away_score_et !== null
+                                ? `${m.home_score_et}–${m.away_score_et} AET`
+                                : "AET"}
+                            </span>
                           )}
                         </div>
                       ) : isLive ? (
