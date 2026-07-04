@@ -271,10 +271,10 @@ export default async function BracketPage() {
       {/* ── Mobile: round-by-round cards ─────────────────────────────── */}
       <div className="md:hidden flex flex-col gap-4">
         {[
-          { label: "Round of 32",   matches: r32 },
-          { label: "Round of 16",   matches: r16 },
-          { label: "Quarterfinals", matches: qf  },
-          { label: "Semifinals",    matches: sf  },
+          { label: "Round of 32",   matches: [...r32L, ...r32R].filter(Boolean) },
+          { label: "Round of 16",   matches: [...r16L, ...r16R].filter(Boolean) },
+          { label: "Quarterfinals", matches: [...qfL,  ...qfR ].filter(Boolean) },
+          { label: "Semifinals",    matches: [sfL, sfR].filter(Boolean) },
           { label: "Final",         matches: finalMatch ? [finalMatch] : [] },
           { label: "Third Place",   matches: third      ? [third]      : [] },
         ].filter(({ matches }) => matches.length > 0).map(({ label, matches }) => (
