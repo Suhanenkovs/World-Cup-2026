@@ -26,12 +26,13 @@ const BRACKET: Record<number, BracketSlot[]> = {
   87: [{ nextNumber: 96, slot: "home_team_id" }],
   88: [{ nextNumber: 96, slot: "away_team_id" }],
   // Round of 16 → Quarterfinals
+  // QF1(M97): W89 vs W90  QF2(M98): W93 vs W94  QF3(M99): W91 vs W92  QF4(M100): W95 vs W96
   89: [{ nextNumber: 97,  slot: "home_team_id" }],
   90: [{ nextNumber: 97,  slot: "away_team_id" }],
-  91: [{ nextNumber: 98,  slot: "home_team_id" }],
-  92: [{ nextNumber: 98,  slot: "away_team_id" }],
-  93: [{ nextNumber: 99,  slot: "home_team_id" }],
-  94: [{ nextNumber: 99,  slot: "away_team_id" }],
+  91: [{ nextNumber: 99,  slot: "home_team_id" }],
+  92: [{ nextNumber: 99,  slot: "away_team_id" }],
+  93: [{ nextNumber: 98,  slot: "home_team_id" }],
+  94: [{ nextNumber: 98,  slot: "away_team_id" }],
   95: [{ nextNumber: 100, slot: "home_team_id" }],
   96: [{ nextNumber: 100, slot: "away_team_id" }],
   // Quarterfinals → Semifinals
@@ -51,9 +52,9 @@ const BRACKET: Record<number, BracketSlot[]> = {
 };
 
 // Promotes winners (and SF losers) into the next knockout slot.
-// Safe to call multiple times — already-filled slots are skipped.
+// Safe to call multiple times — already-filled slots are skipped unless force=true.
 // Returns the number of slots written.
-export async function promoteBracket(supabase: SupabaseClient): Promise<number> {
+export async function promoteBracket(supabase: SupabaseClient, force = false): Promise<number> {
   const { data: finishedKnockouts } = await supabase
     .from("matches")
     .select("match_number, home_team_id, away_team_id, home_score, away_score, home_score_et, away_score_et, penalties_home, penalties_away")
@@ -106,7 +107,7 @@ export async function promoteBracket(supabase: SupabaseClient): Promise<number> 
         ? targetByNumber.get(p.nextNumber)
         : targetByStage.get(p.nextStage!);
       if (!target) continue;
-      if (target[p.slot as keyof typeof target]) continue;
+      if (!force && target[p.slot as keyof typeof target]) continue;
 
       const teamId = p.loser ? loserId : winnerId;
       const { error } = await supabase
