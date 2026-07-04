@@ -1,7 +1,8 @@
+import { revalidatePath } from "next/cache";
 import { createClient, createServiceClient } from "@/lib/supabase/server";
 import { promoteBracket } from "@/lib/bracket";
 
-// One-shot endpoint to force-correct bracket slots (overwrites wrong promotions).
+// Force-corrects all bracket slots and busts ISR caches.
 // Safe to call multiple times — idempotent once slots are correct.
 export async function POST() {
   const supabase = await createClient();
@@ -13,5 +14,9 @@ export async function POST() {
 
   const service = createServiceClient();
   const promoted = await promoteBracket(service, true);
+
+  revalidatePath("/bracket");
+  revalidatePath("/matches");
+
   return Response.json({ promoted });
 }

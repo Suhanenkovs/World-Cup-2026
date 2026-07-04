@@ -21,10 +21,10 @@ const BRACKET: Record<number, BracketSlot[]> = {
   82: [{ nextNumber: 93, slot: "away_team_id" }],
   83: [{ nextNumber: 94, slot: "home_team_id" }],
   84: [{ nextNumber: 94, slot: "away_team_id" }],
-  85: [{ nextNumber: 95, slot: "home_team_id" }],
-  86: [{ nextNumber: 95, slot: "away_team_id" }],
-  87: [{ nextNumber: 96, slot: "home_team_id" }],
-  88: [{ nextNumber: 96, slot: "away_team_id" }],
+  85: [{ nextNumber: 96, slot: "home_team_id" }],
+  86: [{ nextNumber: 95, slot: "home_team_id" }],
+  87: [{ nextNumber: 96, slot: "away_team_id" }],
+  88: [{ nextNumber: 95, slot: "away_team_id" }],
   // Round of 16 → Quarterfinals
   // QF1(M97): W89 vs W90  QF2(M98): W93 vs W94  QF3(M99): W91 vs W92  QF4(M100): W95 vs W96
   89: [{ nextNumber: 97,  slot: "home_team_id" }],
