@@ -29,15 +29,15 @@ const BRACKET: Record<number, BracketSlot[]> = {
   86: [{ nextNumber: 95, slot: "home_team_id" }],
   87: [{ nextNumber: 96, slot: "away_team_id" }],
   88: [{ nextNumber: 95, slot: "away_team_id" }],
-  // Round of 16 → Quarterfinals (verified against ESPN bracket)
-  // QF M97: W89 vs W90 → SF M101   QF M98: W93 vs W94 → SF M101
-  // QF M99: W91 vs W92 → SF M102   QF M100: W95 vs W96 → SF M102
+  // Round of 16 → Quarterfinals (verified against ESPN bracket visual)
+  // Left half → SF M101: QF M97 (W89 vs W90), QF M98 (W91 vs W92)
+  // Right half → SF M102: QF M99 (W93 vs W94), QF M100 (W95 vs W96)
   89: [{ nextNumber: 97,  slot: "home_team_id" }],
   90: [{ nextNumber: 97,  slot: "away_team_id" }],
-  91: [{ nextNumber: 99,  slot: "home_team_id" }],
-  92: [{ nextNumber: 99,  slot: "away_team_id" }],
-  93: [{ nextNumber: 98,  slot: "home_team_id" }],
-  94: [{ nextNumber: 98,  slot: "away_team_id" }],
+  91: [{ nextNumber: 98,  slot: "home_team_id" }],
+  92: [{ nextNumber: 98,  slot: "away_team_id" }],
+  93: [{ nextNumber: 99,  slot: "home_team_id" }],
+  94: [{ nextNumber: 99,  slot: "away_team_id" }],
   95: [{ nextNumber: 100, slot: "home_team_id" }],
   96: [{ nextNumber: 100, slot: "away_team_id" }],
   // Quarterfinals → Semifinals
