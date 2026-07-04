@@ -170,24 +170,25 @@ export default async function BracketPage() {
   const finalMatch = all.find((m) => m.stage === "final");
   const third      = all.find((m) => m.stage === "third_place");
 
-  // Pick matches by official match number for correct bracket tree alignment.
-  // Verified against ESPN bracket visual (espn.com/soccer/bracket) July 2026.
+  // Pick matches by official match number (openfootball numbering, same as our DB seed).
+  // NOTE: openfootball and ESPN use different match numbers for the same games.
+  // Our DB: M91=Brazil/Norway(Jul5), M92=Mexico/England(Jul6), M93=Portugal/Spain(Jul6), M94=USA/Belgium(Jul7)
+  //
   // Left side (→ SF M101): Paraguay/France, Canada/Morocco, Portugal/Spain, USA/Belgium
+  // Left R32 pairs:  [M74,M77]→M89  [M73,M75]→M90  [M83,M84]→M93  [M81,M82]→M94
+  // Left R16:        M89, M90 → QF M97  |  M93, M94 → QF M98  → SF M101
+  //
   // Right side (→ SF M102): Brazil/Norway, Mexico/England, Argentina/Egypt, Switzerland/Colombia
-  //
-  // Left R32 pairs:  [M74,M77]→M89  [M73,M75]→M90  [M83,M84]→M91  [M81,M82]→M92
-  // Left R16:        M89, M90 → QF M97  |  M91, M92 → QF M98  → SF M101
-  //
-  // Right R32 pairs: [M76,M78]→M93  [M79,M80]→M94  [M86,M88]→M95  [M85,M87]→M96
-  // Right R16:       M93, M94 → QF M99  |  M95, M96 → QF M100  → SF M102
+  // Right R32 pairs: [M76,M78]→M91  [M79,M80]→M92  [M86,M88]→M95  [M85,M87]→M96
+  // Right R16:       M91, M92 → QF M99  |  M95, M96 → QF M100  → SF M102
   const r32L = [74, 77, 73, 75, 83, 84, 81, 82].map((n) => byNum.get(n));
-  const r16L = [89, 90, 91, 92].map((n) => byNum.get(n));
+  const r16L = [89, 90, 93, 94].map((n) => byNum.get(n));
   const qfL  = [97, 98].map((n) => byNum.get(n));
   const sfL  = byNum.get(101);
 
   const sfR  = byNum.get(102);
   const qfR  = [99, 100].map((n) => byNum.get(n));
-  const r16R = [93, 94, 95, 96].map((n) => byNum.get(n));
+  const r16R = [91, 92, 95, 96].map((n) => byNum.get(n));
   const r32R = [76, 78, 79, 80, 86, 88, 85, 87].map((n) => byNum.get(n));
 
   // Desktop label row widths must exactly match the bracket column widths below
