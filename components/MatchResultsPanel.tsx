@@ -96,8 +96,37 @@ export default function MatchResultsPanel({ matches }: Props) {
     }
   }
 
+  const [fixMsg, setFixMsg] = useState("");
+  const [fixing, setFixing] = useState(false);
+
+  async function fixBracket() {
+    setFixing(true);
+    setFixMsg("");
+    try {
+      const res = await fetch("/api/admin/fix-bracket", { method: "POST" });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "Failed");
+      setFixMsg(`Done — ${data.promoted} slot(s) corrected`);
+    } catch (e) {
+      setFixMsg((e as Error).message);
+    } finally {
+      setFixing(false);
+    }
+  }
+
   return (
     <div className="space-y-6">
+      <div className="flex items-center gap-3">
+        <button
+          onClick={fixBracket}
+          disabled={fixing}
+          className="px-4 py-2 bg-blue-700 hover:bg-blue-600 disabled:opacity-50 rounded-lg text-sm font-semibold text-white transition-colors"
+        >
+          {fixing ? "Fixing…" : "Fix Bracket Slots"}
+        </button>
+        {fixMsg && <span className={`text-sm ${fixMsg.startsWith("Done") ? "text-emerald-400" : "text-red-400"}`}>{fixMsg}</span>}
+      </div>
+
       {byDate.map(({ date, list }) => (
         <div key={date}>
           <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-2">
