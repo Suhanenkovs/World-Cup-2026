@@ -82,24 +82,32 @@ export default async function MatchDetailPage({
           <div className="text-center px-4">
             {hasScore ? (
               <>
-                {/* Final display score: ET score if available, else regulation */}
+                {/* Regulation score — always the headline number */}
                 <div className="font-mono font-extrabold text-3xl text-white">
-                  {m.home_score_et ?? m.home_score} – {m.away_score_et ?? m.away_score}
+                  {m.home_score} – {m.away_score}
                 </div>
-                {m.score_duration === "EXTRA_TIME" && (
+                {/* Final result shown smaller below, matching bracket card style */}
+                {m.score_duration === "EXTRA_TIME" && m.home_score_et !== null && m.away_score_et !== null && (
+                  <div className="text-sm text-amber-400 font-semibold mt-1">
+                    {m.home_score_et}–{m.away_score_et} AET
+                  </div>
+                )}
+                {m.score_duration === "EXTRA_TIME" && (m.home_score_et === null || m.away_score_et === null) && (
                   <div className="text-[10px] text-amber-400 font-semibold mt-0.5">AET</div>
                 )}
                 {m.score_duration === "PENALTY_SHOOTOUT" && (
-                  <>
-                    <div className="text-[10px] text-amber-400 font-semibold mt-0.5">AET</div>
-                    <div className="text-[10px] text-gray-400 mt-0.5">
-                      ({m.penalties_home} – {m.penalties_away} pens)
-                    </div>
-                  </>
-                )}
-                {/* Regulation score note for knockout ET/PSO matches */}
-                {m.score_duration && m.score_duration !== "REGULAR" && (
-                  <div className="text-[10px] text-gray-600 mt-1">90 min: {m.home_score}–{m.away_score}</div>
+                  <div className="mt-1 flex flex-col items-center gap-0.5">
+                    {m.home_score_et !== null && m.away_score_et !== null && (
+                      <div className="text-sm text-amber-400 font-semibold">
+                        {m.home_score_et}–{m.away_score_et} AET
+                      </div>
+                    )}
+                    {m.penalties_home !== null && m.penalties_away !== null && (
+                      <div className="text-sm text-gray-300 font-semibold">
+                        ({m.penalties_home}–{m.penalties_away} pens)
+                      </div>
+                    )}
+                  </div>
                 )}
               </>
             ) : (
