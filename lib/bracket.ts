@@ -8,29 +8,30 @@ type BracketSlot = {
 };
 
 const BRACKET: Record<number, BracketSlot[]> = {
-  // Round of 32 → Round of 16 (verified against openfootball + official schedule)
+  // Round of 32 → Round of 16 (verified against ESPN bracket)
   // M89: Paraguay(74) vs France(77)    M90: Canada(73) vs Morocco(75)
-  // M91: Brazil(76) vs Norway(78)      M92: Mexico(79) vs England(80)
-  // M93: Portugal(83) vs Spain(84)     M94: USA(81) vs Belgium(82)
+  // M91: Portugal(83) vs Spain(84)     M92: USA(81) vs Belgium(82)
+  // M93: Brazil(76) vs Norway(78)      M94: Mexico(79) vs England(80)
   // M95: Argentina(86) vs Egypt(88)    M96: Switzerland(85) vs Colombia(87)
   73: [{ nextNumber: 90, slot: "home_team_id" }],
   74: [{ nextNumber: 89, slot: "home_team_id" }],
   75: [{ nextNumber: 90, slot: "away_team_id" }],
-  76: [{ nextNumber: 91, slot: "home_team_id" }],
+  76: [{ nextNumber: 93, slot: "home_team_id" }],
   77: [{ nextNumber: 89, slot: "away_team_id" }],
-  78: [{ nextNumber: 91, slot: "away_team_id" }],
-  79: [{ nextNumber: 92, slot: "home_team_id" }],
-  80: [{ nextNumber: 92, slot: "away_team_id" }],
-  81: [{ nextNumber: 94, slot: "home_team_id" }],
-  82: [{ nextNumber: 94, slot: "away_team_id" }],
-  83: [{ nextNumber: 93, slot: "home_team_id" }],
-  84: [{ nextNumber: 93, slot: "away_team_id" }],
+  78: [{ nextNumber: 93, slot: "away_team_id" }],
+  79: [{ nextNumber: 94, slot: "home_team_id" }],
+  80: [{ nextNumber: 94, slot: "away_team_id" }],
+  81: [{ nextNumber: 92, slot: "home_team_id" }],
+  82: [{ nextNumber: 92, slot: "away_team_id" }],
+  83: [{ nextNumber: 91, slot: "home_team_id" }],
+  84: [{ nextNumber: 91, slot: "away_team_id" }],
   85: [{ nextNumber: 96, slot: "home_team_id" }],
   86: [{ nextNumber: 95, slot: "home_team_id" }],
   87: [{ nextNumber: 96, slot: "away_team_id" }],
   88: [{ nextNumber: 95, slot: "away_team_id" }],
-  // Round of 16 → Quarterfinals
-  // QF1(M97): W89 vs W90  QF2(M98): W93 vs W94  QF3(M99): W91 vs W92  QF4(M100): W95 vs W96
+  // Round of 16 → Quarterfinals (verified against ESPN bracket)
+  // QF M97: W89 vs W90 → SF M101   QF M98: W93 vs W94 → SF M101
+  // QF M99: W91 vs W92 → SF M102   QF M100: W95 vs W96 → SF M102
   89: [{ nextNumber: 97,  slot: "home_team_id" }],
   90: [{ nextNumber: 97,  slot: "away_team_id" }],
   91: [{ nextNumber: 99,  slot: "home_team_id" }],

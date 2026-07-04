@@ -166,25 +166,28 @@ export default async function BracketPage() {
     .order("match_number", { ascending: true });
 
   const all = (matches ?? []) as MatchWithTeams[];
-  const r32  = all.filter((m) => m.stage === "round_of_32");
-  const r16  = all.filter((m) => m.stage === "round_of_16");
-  const qf   = all.filter((m) => m.stage === "quarterfinal");
-  const sf   = all.filter((m) => m.stage === "semifinal");
+  const byNum = new Map(all.filter((m) => m.match_number != null).map((m) => [m.match_number as number, m]));
   const finalMatch = all.find((m) => m.stage === "final");
   const third      = all.find((m) => m.stage === "third_place");
 
-  function pad(arr: MatchWithTeams[], n: number): (MatchWithTeams | undefined)[] {
-    return [...arr, ...Array(Math.max(0, n - arr.length)).fill(undefined)];
-  }
+  // Pick matches by official match number for correct bracket tree alignment.
+  // Verified against ESPN bracket (espn.com/soccer/bracket) July 2026.
+  // Left side feeds into SF M101; right side feeds into SF M102.
+  //
+  // Left R32 pairs:  [M74,M77]→M89  [M73,M75]→M90  [M76,M78]→M93  [M79,M80]→M94
+  // Left R16:        M89, M90 → QF M97  |  M93, M94 → QF M98  → SF M101
+  //
+  // Right R32 pairs: [M83,M84]→M91  [M81,M82]→M92  [M86,M88]→M95  [M85,M87]→M96
+  // Right R16:       M91, M92 → QF M99  |  M95, M96 → QF M100  → SF M102
+  const r32L = [74, 77, 73, 75, 76, 78, 79, 80].map((n) => byNum.get(n));
+  const r16L = [89, 90, 93, 94].map((n) => byNum.get(n));
+  const qfL  = [97, 98].map((n) => byNum.get(n));
+  const sfL  = byNum.get(101);
 
-  const r32L = pad(r32.slice(0, 8), 8);
-  const r32R = pad(r32.slice(8),    8);
-  const r16L = pad(r16.slice(0, 4), 4);
-  const r16R = pad(r16.slice(4),    4);
-  const qfL  = pad(qf.slice(0, 2),  2);
-  const qfR  = pad(qf.slice(2),     2);
-  const sfL  = sf[0];
-  const sfR  = sf[1];
+  const sfR  = byNum.get(102);
+  const qfR  = [99, 100].map((n) => byNum.get(n));
+  const r16R = [91, 92, 95, 96].map((n) => byNum.get(n));
+  const r32R = [83, 84, 81, 82, 86, 88, 85, 87].map((n) => byNum.get(n));
 
   // Desktop label row widths must exactly match the bracket column widths below
   // RoundCol = w-36 (144px), Conn = w-4 (16px), HorizLine = w-6 (24px), CenterCol = w-44 (176px)
