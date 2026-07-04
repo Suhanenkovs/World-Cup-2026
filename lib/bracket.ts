@@ -8,19 +8,23 @@ type BracketSlot = {
 };
 
 const BRACKET: Record<number, BracketSlot[]> = {
-  // Round of 32 → Round of 16
-  73: [{ nextNumber: 89, slot: "home_team_id" }],
-  74: [{ nextNumber: 89, slot: "away_team_id" }],
-  75: [{ nextNumber: 90, slot: "home_team_id" }],
-  76: [{ nextNumber: 90, slot: "away_team_id" }],
-  77: [{ nextNumber: 91, slot: "home_team_id" }],
+  // Round of 32 → Round of 16 (verified against openfootball + official schedule)
+  // M89: Paraguay(74) vs France(77)    M90: Canada(73) vs Morocco(75)
+  // M91: Brazil(76) vs Norway(78)      M92: Mexico(79) vs England(80)
+  // M93: Portugal(83) vs Spain(84)     M94: USA(81) vs Belgium(82)
+  // M95: Argentina(86) vs Egypt(88)    M96: Switzerland(85) vs Colombia(87)
+  73: [{ nextNumber: 90, slot: "home_team_id" }],
+  74: [{ nextNumber: 89, slot: "home_team_id" }],
+  75: [{ nextNumber: 90, slot: "away_team_id" }],
+  76: [{ nextNumber: 91, slot: "home_team_id" }],
+  77: [{ nextNumber: 89, slot: "away_team_id" }],
   78: [{ nextNumber: 91, slot: "away_team_id" }],
   79: [{ nextNumber: 92, slot: "home_team_id" }],
   80: [{ nextNumber: 92, slot: "away_team_id" }],
-  81: [{ nextNumber: 93, slot: "home_team_id" }],
-  82: [{ nextNumber: 93, slot: "away_team_id" }],
-  83: [{ nextNumber: 94, slot: "home_team_id" }],
-  84: [{ nextNumber: 94, slot: "away_team_id" }],
+  81: [{ nextNumber: 94, slot: "home_team_id" }],
+  82: [{ nextNumber: 94, slot: "away_team_id" }],
+  83: [{ nextNumber: 93, slot: "home_team_id" }],
+  84: [{ nextNumber: 93, slot: "away_team_id" }],
   85: [{ nextNumber: 96, slot: "home_team_id" }],
   86: [{ nextNumber: 95, slot: "home_team_id" }],
   87: [{ nextNumber: 96, slot: "away_team_id" }],
