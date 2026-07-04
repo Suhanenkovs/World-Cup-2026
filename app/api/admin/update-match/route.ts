@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { createClient, createServiceClient } from "@/lib/supabase/server";
 import { calculateMatchPoints, type Stage } from "@/lib";
+import { promoteBracket } from "@/lib/bracket";
 
 export async function POST(request: NextRequest) {
   const supabase = await createClient();
@@ -28,6 +29,9 @@ export async function POST(request: NextRequest) {
 
   const { error } = await service.from("matches").update(update).eq("id", matchId);
   if (error) return Response.json({ error: error.message }, { status: 500 });
+
+  // Immediately promote winners into the next knockout slot whenever a match is saved as finished.
+  if (status === "finished") await promoteBracket(service);
 
   // (Re-)score all predictions when marked finished with a valid regulation score.
   // We always overwrite points_earned so a score correction propagates to the leaderboard.
