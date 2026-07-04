@@ -114,103 +114,18 @@ export default function MatchResultsPanel({ matches }: Props) {
     }
   }
 
-  type WrongPred = { id: string; pred_home: number; pred_away: number; profiles: { username: string; email: string }; matches: { match_number: number } };
-  const [wrongPreds, setWrongPreds] = useState<WrongPred[] | null>(null);
-  const [wrongLoading, setWrongLoading] = useState(false);
-  const [wrongMsg, setWrongMsg] = useState("");
-
-  async function fetchWrongPreds() {
-    setWrongLoading(true);
-    setWrongMsg("");
-    try {
-      const res = await fetch("/api/admin/wrong-r16-predictions");
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? "Failed");
-      setWrongPreds(data.predictions);
-      if (!data.predictions.length) setWrongMsg("No predictions on affected matches.");
-    } catch (e) {
-      setWrongMsg((e as Error).message);
-    } finally {
-      setWrongLoading(false);
-    }
-  }
-
-  async function deleteWrongPreds() {
-    if (!confirm("Delete all predictions on matches M91, M92, M93, M94?")) return;
-    setWrongLoading(true);
-    setWrongMsg("");
-    try {
-      const res = await fetch("/api/admin/wrong-r16-predictions", { method: "DELETE" });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? "Failed");
-      setWrongMsg(`Deleted ${data.deleted} prediction(s).`);
-      setWrongPreds([]);
-    } catch (e) {
-      setWrongMsg((e as Error).message);
-    } finally {
-      setWrongLoading(false);
-    }
-  }
-
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-start gap-4">
-        <div className="flex items-center gap-3">
-          <button
-            onClick={fixBracket}
-            disabled={fixing}
-            className="px-4 py-2 bg-blue-700 hover:bg-blue-600 disabled:opacity-50 rounded-lg text-sm font-semibold text-white transition-colors"
-          >
-            {fixing ? "Fixing…" : "Fix Bracket Slots"}
-          </button>
-          {fixMsg && <span className={`text-sm ${fixMsg.startsWith("Done") ? "text-emerald-400" : "text-red-400"}`}>{fixMsg}</span>}
-        </div>
-        <div className="flex items-center gap-3">
-          <button
-            onClick={fetchWrongPreds}
-            disabled={wrongLoading}
-            className="px-4 py-2 bg-yellow-700 hover:bg-yellow-600 disabled:opacity-50 rounded-lg text-sm font-semibold text-white transition-colors"
-          >
-            {wrongLoading ? "Loading…" : "Show Wrong R16 Predictions"}
-          </button>
-          {wrongPreds && wrongPreds.length > 0 && (
-            <button
-              onClick={deleteWrongPreds}
-              disabled={wrongLoading}
-              className="px-4 py-2 bg-red-700 hover:bg-red-600 disabled:opacity-50 rounded-lg text-sm font-semibold text-white transition-colors"
-            >
-              Delete All ({wrongPreds.length})
-            </button>
-          )}
-          {wrongMsg && <span className="text-sm text-emerald-400">{wrongMsg}</span>}
-        </div>
+      <div className="flex items-center gap-3">
+        <button
+          onClick={fixBracket}
+          disabled={fixing}
+          className="px-4 py-2 bg-blue-700 hover:bg-blue-600 disabled:opacity-50 rounded-lg text-sm font-semibold text-white transition-colors"
+        >
+          {fixing ? "Fixing…" : "Fix Bracket Slots"}
+        </button>
+        {fixMsg && <span className={`text-sm ${fixMsg.startsWith("Done") ? "text-emerald-400" : "text-red-400"}`}>{fixMsg}</span>}
       </div>
-
-      {wrongPreds && wrongPreds.length > 0 && (
-        <div className="bg-yellow-950/40 border border-yellow-700/40 rounded-xl p-4">
-          <p className="text-xs font-bold uppercase tracking-wider text-yellow-400 mb-3">
-            Predictions on wrong R16 matches (M91–M94)
-          </p>
-          <table className="w-full text-sm text-gray-300">
-            <thead>
-              <tr className="text-xs text-gray-500 border-b border-white/10">
-                <th className="text-left pb-1">User</th>
-                <th className="text-left pb-1">Match</th>
-                <th className="text-left pb-1">Prediction</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-white/5">
-              {wrongPreds.map((p) => (
-                <tr key={p.id}>
-                  <td className="py-1 font-medium">{p.profiles?.username} <span className="text-gray-500 text-xs">({p.profiles?.email})</span></td>
-                  <td className="py-1 text-amber-400">M{p.matches?.match_number}</td>
-                  <td className="py-1 font-mono">{p.pred_home} – {p.pred_away}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
 
       {byDate.map(({ date, list }) => (
         <div key={date}>
