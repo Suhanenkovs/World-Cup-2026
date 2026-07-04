@@ -303,6 +303,19 @@ export default function AdminPanel({ players, questions, prizeConfig, tab }: Pro
       : `Error: ${json.error}`);
   }
 
+  type AuditRow = { player: string; match: string; pick: string; stored_pts: number; correct_pts: number; diff: number };
+  const [auditResult, setAuditResult] = useState<{ total: number; discrepancies: AuditRow[] } | null>(null);
+  const [auditLoading, setAuditLoading] = useState(false);
+
+  async function runAudit() {
+    setAuditLoading(true);
+    setAuditResult(null);
+    const res = await fetch("/api/admin/score-audit");
+    const json = await res.json();
+    setAuditResult(json);
+    setAuditLoading(false);
+  }
+
   return (
     <div className="flex flex-col gap-8">
       {tab === "participants" && <>
@@ -520,8 +533,53 @@ export default function AdminPanel({ players, questions, prizeConfig, tab }: Pro
           >
             Rescore all
           </button>
+          <button
+            onClick={runAudit}
+            disabled={auditLoading}
+            className="bg-amber-900/60 hover:bg-amber-800/60 disabled:opacity-40 text-amber-300 text-sm px-4 py-2 rounded-lg transition-colors"
+          >
+            {auditLoading ? "Auditing…" : "Audit scores"}
+          </button>
         </div>
         {rescoreStatus && <p className="text-sm text-gray-400 mt-2">{rescoreStatus}</p>}
+        {auditResult && (
+          <div className="mt-3">
+            {auditResult.total === 0 ? (
+              <p className="text-sm text-emerald-400">All {auditResult.total === 0 ? "stored" : auditResult.total} scores match — no discrepancies found.</p>
+            ) : (
+              <div>
+                <p className="text-sm text-red-400 mb-2">{auditResult.total} discrepancy/ies found:</p>
+                <div className="overflow-x-auto">
+                  <table className="text-xs text-gray-300 w-full">
+                    <thead>
+                      <tr className="text-gray-500 border-b border-white/10">
+                        <th className="text-left pb-1 pr-4">Player</th>
+                        <th className="text-left pb-1 pr-4">Match</th>
+                        <th className="text-left pb-1 pr-4">Pick</th>
+                        <th className="text-left pb-1 pr-4">Stored</th>
+                        <th className="text-left pb-1 pr-4">Correct</th>
+                        <th className="text-left pb-1">Diff</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-white/5">
+                      {auditResult.discrepancies.map((r, i) => (
+                        <tr key={i}>
+                          <td className="py-1 pr-4 font-medium">{r.player}</td>
+                          <td className="py-1 pr-4">{r.match}</td>
+                          <td className="py-1 pr-4 font-mono">{r.pick}</td>
+                          <td className="py-1 pr-4">{r.stored_pts ?? "null"}</td>
+                          <td className="py-1 pr-4 text-emerald-400">{r.correct_pts}</td>
+                          <td className={`py-1 font-semibold ${r.diff > 0 ? "text-emerald-400" : "text-red-400"}`}>{r.diff > 0 ? "+" : ""}{r.diff}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                <p className="text-xs text-gray-500 mt-2">Run &quot;Rescore all&quot; to fix these automatically.</p>
+              </div>
+            )}
+          </div>
+        )}
       </div>
       </>}
       {tab === "bonus" && <>
