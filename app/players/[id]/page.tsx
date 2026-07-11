@@ -124,13 +124,13 @@ export default async function PlayerPage({
                         <Link href={`/matches/${m.id}`} className="flex items-center gap-1.5 hover:text-amber-400 transition-colors group">
                           {homeSrc
                             // eslint-disable-next-line @next/next/no-img-element
-                            ? <img src={homeSrc} alt={homeName} className="w-4 h-3 object-cover rounded-sm border border-gray-700 shrink-0" />
+                            ? <img src={homeSrc} alt={homeName} loading="lazy" className="w-4 h-3 object-cover rounded-sm border border-gray-700 shrink-0" />
                             : null}
                           <span className="text-white text-xs group-hover:text-amber-400">{homeName}</span>
                           <span className="text-gray-600 text-xs">vs</span>
                           {awaySrc
                             // eslint-disable-next-line @next/next/no-img-element
-                            ? <img src={awaySrc} alt={awayName} className="w-4 h-3 object-cover rounded-sm border border-gray-700 shrink-0" />
+                            ? <img src={awaySrc} alt={awayName} loading="lazy" className="w-4 h-3 object-cover rounded-sm border border-gray-700 shrink-0" />
                             : null}
                           <span className="text-white text-xs group-hover:text-amber-400">{awayName}</span>
                         </Link>
@@ -184,13 +184,13 @@ export default async function PlayerPage({
                   <div className="flex items-center gap-1.5 flex-1 min-w-0 text-xs">
                     {homeSrc
                       // eslint-disable-next-line @next/next/no-img-element
-                      ? <img src={homeSrc} alt="" className="w-4 h-3 object-cover rounded-sm border border-gray-700 shrink-0" />
+                      ? <img src={homeSrc} alt="" loading="lazy" className="w-4 h-3 object-cover rounded-sm border border-gray-700 shrink-0" />
                       : null}
                     <span className="text-white truncate">{m.home_team?.name ?? "TBD"}</span>
                     <span className="text-gray-600 shrink-0">vs</span>
                     {awaySrc
                       // eslint-disable-next-line @next/next/no-img-element
-                      ? <img src={awaySrc} alt="" className="w-4 h-3 object-cover rounded-sm border border-gray-700 shrink-0" />
+                      ? <img src={awaySrc} alt="" loading="lazy" className="w-4 h-3 object-cover rounded-sm border border-gray-700 shrink-0" />
                       : null}
                     <span className="text-white truncate">{m.away_team?.name ?? "TBD"}</span>
                   </div>

@@ -1,4 +1,4 @@
-import { getFlagUrl } from "@/lib/teamFlags";
+﻿import { getFlagUrl } from "@/lib/teamFlags";
 export const revalidate = 300;
 
 interface FDScorer {
@@ -92,7 +92,7 @@ export default async function ScorersPage() {
                         <div className="flex items-center gap-1.5 mt-0.5 sm:hidden">
                           {flagSrc
                             // eslint-disable-next-line @next/next/no-img-element
-                            ? <img src={flagSrc} alt={s.team.name} className="w-4 h-3 object-cover rounded-sm border border-gray-700 shrink-0" />
+                            ? <img src={flagSrc} alt={s.team.name} loading="lazy" className="w-4 h-3 object-cover rounded-sm border border-gray-700 shrink-0" />
                             : null
                           }
                           <span className="text-xs text-gray-400">{s.team.shortName}</span>
@@ -102,7 +102,7 @@ export default async function ScorersPage() {
                         <div className="flex items-center gap-1.5">
                           {flagSrc
                             // eslint-disable-next-line @next/next/no-img-element
-                            ? <img src={flagSrc} alt={s.team.name} className="w-5 h-3.5 object-cover rounded-sm border border-gray-700 shrink-0" />
+                            ? <img src={flagSrc} alt={s.team.name} loading="lazy" className="w-5 h-3.5 object-cover rounded-sm border border-gray-700 shrink-0" />
                             : null
                           }
                           <span className="text-gray-300 text-xs">{s.team.shortName}</span>

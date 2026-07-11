@@ -145,7 +145,7 @@ export default async function TeamPage({
       <div className="flex items-center gap-5 mb-8">
         {flagSrc
           // eslint-disable-next-line @next/next/no-img-element
-          ? <img src={flagSrc} alt={teamName} className="w-20 h-14 object-cover rounded-xl border border-white/10 shadow-lg shrink-0" />
+          ? <img src={flagSrc} alt={teamName} loading="lazy" className="w-20 h-14 object-cover rounded-xl border border-white/10 shadow-lg shrink-0" />
           : <span className="w-20 h-14 rounded-xl bg-gray-800 shrink-0 inline-block" />
         }
         <div>

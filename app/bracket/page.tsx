@@ -13,7 +13,7 @@ function Flag({ team }: { team: Team | null | undefined }) {
   const src = getFlagUrl(team.name) ?? team.flag_url;
   if (!src) return null;
   // eslint-disable-next-line @next/next/no-img-element
-  return <img src={src} alt={team.name} className="w-5 h-3.5 object-cover rounded-sm border border-gray-700 shrink-0" />;
+  return <img src={src} alt={team.name} loading="lazy" className="w-5 h-3.5 object-cover rounded-sm border border-gray-700 shrink-0" />;
 }
 
 function TeamRow({ team, score, won }: { team: Team | null | undefined; score: number | null; won?: boolean }) {
@@ -299,7 +299,7 @@ export default async function BracketPage() {
                       <span className="text-white text-xs truncate">{m.home_team?.name ?? "TBD"}</span>
                       {homeSrc
                         // eslint-disable-next-line @next/next/no-img-element
-                        ? <img src={homeSrc} alt="" className="w-6 h-4 object-cover rounded-sm border border-gray-700 shrink-0" />
+                        ? <img src={homeSrc} alt="" loading="lazy" className="w-6 h-4 object-cover rounded-sm border border-gray-700 shrink-0" />
                         : <span className="w-6 h-4 bg-gray-700 rounded-sm shrink-0 inline-block" />}
                     </div>
                     {/* Score / vs */}
@@ -332,7 +332,7 @@ export default async function BracketPage() {
                     <div className="flex items-center gap-1.5 flex-1 min-w-0">
                       {awaySrc
                         // eslint-disable-next-line @next/next/no-img-element
-                        ? <img src={awaySrc} alt="" className="w-6 h-4 object-cover rounded-sm border border-gray-700 shrink-0" />
+                        ? <img src={awaySrc} alt="" loading="lazy" className="w-6 h-4 object-cover rounded-sm border border-gray-700 shrink-0" />
                         : <span className="w-6 h-4 bg-gray-700 rounded-sm shrink-0 inline-block" />}
                       <span className="text-white text-xs truncate">{m.away_team?.name ?? "TBD"}</span>
                     </div>

@@ -31,7 +31,7 @@ function FlagImg({ team, className = "w-8 h-6" }: { team: Team | null; className
   const src = getFlagUrl(team.name) ?? team.flag_url;
   if (!src) return <span className={`${className} rounded bg-gray-700 shrink-0 inline-block`} />;
   // eslint-disable-next-line @next/next/no-img-element
-  return <img src={src} alt={team.name} className={`${className} object-cover rounded shrink-0 border border-gray-700`} />;
+  return <img src={src} alt={team.name} loading="lazy" className={`${className} object-cover rounded shrink-0 border border-gray-700`} />;
 }
 
 function abbr(team: Team | null): string {

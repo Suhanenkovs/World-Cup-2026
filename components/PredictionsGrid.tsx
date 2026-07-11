@@ -14,7 +14,7 @@ function Flag({ team }: { team: Team | null }) {
   const src = getFlagUrl(team.name) ?? team.flag_url;
   if (!src) return null;
   // eslint-disable-next-line @next/next/no-img-element
-  return <img src={src} alt={team.name} className="w-6 h-4 object-cover rounded shrink-0 border border-gray-700" />;
+  return <img src={src} alt={team.name} loading="lazy" className="w-6 h-4 object-cover rounded shrink-0 border border-gray-700" />;
 }
 
 function GroupOrStageBadge({ stage, groupLetter }: { stage: string; groupLetter: string | null }) {

@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/server";
+﻿import { createClient } from "@/lib/supabase/server";
 import { getFlagUrl } from "@/lib/teamFlags";
 import { getTeamTLA } from "@/lib/teamTLA";
 import { formatInTimeZone } from "date-fns-tz";
@@ -8,7 +8,7 @@ import AutoRefresh from "@/components/AutoRefresh";
 
 export const revalidate = 60;
 
-// ── Standings computed from DB finished matches only ──────────────────────────
+// â”€â”€ Standings computed from DB finished matches only â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 interface StandingRow {
   teamId: string;
@@ -67,7 +67,7 @@ function computeStandings(groupMatches: MatchWithTeams[]): StandingRow[] {
   );
 }
 
-// ── Sub-components ────────────────────────────────────────────────────────────
+// â”€â”€ Sub-components â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function StandingsTable({ rows }: { rows: StandingRow[] }) {
   return (
@@ -99,7 +99,7 @@ function StandingsTable({ rows }: { rows: StandingRow[] }) {
                   <Link href={`/teams/${row.apiId}`} className="flex items-center gap-1.5 hover:text-amber-400 transition-colors group">
                     {flagSrc
                       // eslint-disable-next-line @next/next/no-img-element
-                      ? <img src={flagSrc} alt={row.teamName} className="w-5 h-3.5 object-cover rounded-sm border border-gray-700 shrink-0" />
+                      ? <img src={flagSrc} alt={row.teamName} loading="lazy" className="w-5 h-3.5 object-cover rounded-sm border border-gray-700 shrink-0" /
                       : <span className="w-5 h-3.5 rounded-sm bg-gray-700 shrink-0 inline-block" />
                     }
                     <span className="text-white font-medium truncate group-hover:text-amber-400 transition-colors">{row.teamName}</span>
@@ -108,7 +108,7 @@ function StandingsTable({ rows }: { rows: StandingRow[] }) {
                   <div className="flex items-center gap-1.5">
                     {flagSrc
                       // eslint-disable-next-line @next/next/no-img-element
-                      ? <img src={flagSrc} alt={row.teamName} className="w-5 h-3.5 object-cover rounded-sm border border-gray-700 shrink-0" />
+                      ? <img src={flagSrc} alt={row.teamName} loading="lazy" className="w-5 h-3.5 object-cover rounded-sm border border-gray-700 shrink-0" /
                       : <span className="w-5 h-3.5 rounded-sm bg-gray-700 shrink-0 inline-block" />
                     }
                     <span className="text-white font-medium truncate">{row.teamName}</span>
@@ -147,20 +147,20 @@ function GroupFixtures({ matches }: { matches: MatchWithTeams[] }) {
             href={`/matches/${m.id}`}
             className="flex items-center px-2 py-1.5 rounded-lg hover:bg-gray-800/60 transition-colors"
           >
-            {/* Date — flush left, aligned with table */}
+            {/* Date â€” flush left, aligned with table */}
             <span className="text-gray-500 text-[10px] shrink-0">{formatInTimeZone(kickoff, "Europe/Riga", "d MMM HH:mm")}</span>
 
             {/* Spacer pushes match content to the right */}
             <div className="flex-1" />
 
-            {/* Match content — fixed widths keep flags aligned across rows */}
+            {/* Match content â€” fixed widths keep flags aligned across rows */}
             <div className="flex items-center gap-2 shrink-0">
               {/* Home: TLA + flag, right-aligned, fixed width */}
               <div className="flex items-center justify-end gap-1 w-14">
                 <span className="text-white font-mono text-[11px]">{getTeamTLA(m.home_team?.name)}</span>
                 {homeFlagSrc
                   // eslint-disable-next-line @next/next/no-img-element
-                  ? <img src={homeFlagSrc} alt="" className="w-5 h-3.5 object-cover rounded-sm border border-gray-700 shrink-0" />
+                  ? <img src={homeFlagSrc} alt="" loading="lazy" className="w-5 h-3.5 object-cover rounded-sm border border-gray-700 shrink-0" /
                   : <span className="w-5 h-3.5 bg-gray-700 rounded-sm inline-block shrink-0" />
                 }
               </div>
@@ -172,7 +172,7 @@ function GroupFixtures({ matches }: { matches: MatchWithTeams[] }) {
                 )}
                 {hasScore ? (
                   <span className={`font-mono font-bold text-xs ${isLive ? "text-emerald-400" : "text-white"}`}>
-                    {m.home_score}–{m.away_score}
+                    {m.home_score}â€“{m.away_score}
                   </span>
                 ) : !isLive ? (
                   <span className="text-gray-600 text-xs">vs</span>
@@ -183,7 +183,7 @@ function GroupFixtures({ matches }: { matches: MatchWithTeams[] }) {
               <div className="flex items-center justify-start gap-1 w-14">
                 {awayFlagSrc
                   // eslint-disable-next-line @next/next/no-img-element
-                  ? <img src={awayFlagSrc} alt="" className="w-5 h-3.5 object-cover rounded-sm border border-gray-700 shrink-0" />
+                  ? <img src={awayFlagSrc} alt="" loading="lazy" className="w-5 h-3.5 object-cover rounded-sm border border-gray-700 shrink-0" /
                   : <span className="w-5 h-3.5 bg-gray-700 rounded-sm inline-block shrink-0" />
                 }
                 <span className="text-white font-mono text-[11px]">{getTeamTLA(m.away_team?.name)}</span>
@@ -196,7 +196,7 @@ function GroupFixtures({ matches }: { matches: MatchWithTeams[] }) {
   );
 }
 
-// ── Page ──────────────────────────────────────────────────────────────────────
+// â”€â”€ Page â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export default async function GroupsPage() {
   const supabase = await createClient();
