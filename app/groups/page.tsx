@@ -99,7 +99,7 @@ function StandingsTable({ rows }: { rows: StandingRow[] }) {
                   <Link href={`/teams/${row.apiId}`} className="flex items-center gap-1.5 hover:text-amber-400 transition-colors group">
                     {flagSrc
                       // eslint-disable-next-line @next/next/no-img-element
-                      ? <img src={flagSrc} alt={row.teamName} loading="lazy" className="w-5 h-3.5 object-cover rounded-sm border border-gray-700 shrink-0" /
+                      ? <img src={flagSrc} alt={row.teamName} loading="lazy" className="w-5 h-3.5 object-cover rounded-sm border border-gray-700 shrink-0" />
                       : <span className="w-5 h-3.5 rounded-sm bg-gray-700 shrink-0 inline-block" />
                     }
                     <span className="text-white font-medium truncate group-hover:text-amber-400 transition-colors">{row.teamName}</span>
@@ -108,7 +108,7 @@ function StandingsTable({ rows }: { rows: StandingRow[] }) {
                   <div className="flex items-center gap-1.5">
                     {flagSrc
                       // eslint-disable-next-line @next/next/no-img-element
-                      ? <img src={flagSrc} alt={row.teamName} loading="lazy" className="w-5 h-3.5 object-cover rounded-sm border border-gray-700 shrink-0" /
+                      ? <img src={flagSrc} alt={row.teamName} loading="lazy" className="w-5 h-3.5 object-cover rounded-sm border border-gray-700 shrink-0" />
                       : <span className="w-5 h-3.5 rounded-sm bg-gray-700 shrink-0 inline-block" />
                     }
                     <span className="text-white font-medium truncate">{row.teamName}</span>
