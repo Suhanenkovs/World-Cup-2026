@@ -160,7 +160,7 @@ function GroupFixtures({ matches }: { matches: MatchWithTeams[] }) {
                 <span className="text-white font-mono text-[11px]">{getTeamTLA(m.home_team?.name)}</span>
                 {homeFlagSrc
                   // eslint-disable-next-line @next/next/no-img-element
-                  ? <img src={homeFlagSrc} alt="" loading="lazy" className="w-5 h-3.5 object-cover rounded-sm border border-gray-700 shrink-0" /
+                  ? <img src={homeFlagSrc} alt="" loading="lazy" className="w-5 h-3.5 object-cover rounded-sm border border-gray-700 shrink-0" />
                   : <span className="w-5 h-3.5 bg-gray-700 rounded-sm inline-block shrink-0" />
                 }
               </div>
@@ -183,7 +183,7 @@ function GroupFixtures({ matches }: { matches: MatchWithTeams[] }) {
               <div className="flex items-center justify-start gap-1 w-14">
                 {awayFlagSrc
                   // eslint-disable-next-line @next/next/no-img-element
-                  ? <img src={awayFlagSrc} alt="" loading="lazy" className="w-5 h-3.5 object-cover rounded-sm border border-gray-700 shrink-0" /
+                  ? <img src={awayFlagSrc} alt="" loading="lazy" className="w-5 h-3.5 object-cover rounded-sm border border-gray-700 shrink-0" />
                   : <span className="w-5 h-3.5 bg-gray-700 rounded-sm inline-block shrink-0" />
                 }
                 <span className="text-white font-mono text-[11px]">{getTeamTLA(m.away_team?.name)}</span>
