@@ -48,6 +48,45 @@ export default function AdminPanel({ players, questions, prizeConfig, tab }: Pro
   const [bonusStatus, setBonusStatus] = useState<Record<string, string>>({});
   const [autoResolveStatus, setAutoResolveStatus] = useState("");
 
+  // Per-question answer viewer/editor
+  type AnswerRow = { id: string; answer: string; points_earned: number | null; user_id: string; profiles: { name: string | null; username: string } | null };
+  const [answersByQ, setAnswersByQ] = useState<Record<string, AnswerRow[]>>({});
+  const [showAnswersFor, setShowAnswersFor] = useState<string | null>(null);
+  const [answerEdits, setAnswerEdits] = useState<Record<string, string>>({});
+  const [answerSaveStatus, setAnswerSaveStatus] = useState<Record<string, string>>({});
+
+  async function loadAnswers(questionId: string) {
+    if (showAnswersFor === questionId) { setShowAnswersFor(null); return; }
+    const res = await fetch(`/api/admin/bonus-answers?questionId=${questionId}`);
+    const json = await res.json();
+    setAnswersByQ((prev) => ({ ...prev, [questionId]: json.answers ?? [] }));
+    setShowAnswersFor(questionId);
+  }
+
+  async function saveAnswer(answerId: string, newText: string) {
+    setAnswerSaveStatus((s) => ({ ...s, [answerId]: "Saving…" }));
+    const res = await fetch("/api/admin/bonus-answers", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: answerId, answer: newText }),
+    });
+    const json = await res.json();
+    if (json.success) {
+      setAnswersByQ((prev) => {
+        const updated: Record<string, AnswerRow[]> = {};
+        for (const [qid, rows] of Object.entries(prev)) {
+          updated[qid] = rows.map((r) => r.id === answerId ? { ...r, answer: newText.trim() } : r);
+        }
+        return updated;
+      });
+      setAnswerEdits((e) => { const n = { ...e }; delete n[answerId]; return n; });
+      setAnswerSaveStatus((s) => ({ ...s, [answerId]: "Saved ✓" }));
+      setTimeout(() => setAnswerSaveStatus((s) => { const n = { ...s }; delete n[answerId]; return n; }), 2000);
+    } else {
+      setAnswerSaveStatus((s) => ({ ...s, [answerId]: `Error: ${json.error}` }));
+    }
+  }
+
   // Bonus question management
   const [bonusQs, setBonusQs] = useState<BonusQuestion[]>(questions);
   const [editingQ, setEditingQ] = useState<string | null>(null);
@@ -685,6 +724,66 @@ export default function AdminPanel({ players, questions, prizeConfig, tab }: Pro
                   </div>
                 </div>
               )}
+
+              {/* View / edit submitted answers */}
+              <div className="mt-2 pt-2 border-t border-gray-700/50">
+                <button
+                  onClick={() => loadAnswers(q.id)}
+                  className="text-xs text-gray-500 hover:text-gray-300 transition-colors"
+                >
+                  {showAnswersFor === q.id ? "Hide answers" : "View / edit answers"}
+                </button>
+                {showAnswersFor === q.id && (
+                  <div className="mt-2 flex flex-col gap-1">
+                    {(answersByQ[q.id] ?? []).length === 0 && (
+                      <p className="text-xs text-gray-600">No answers submitted yet.</p>
+                    )}
+                    {(answersByQ[q.id] ?? []).map((a) => {
+                      const displayName = a.profiles?.name || a.profiles?.username || a.user_id;
+                      return (
+                        <div key={a.id} className="flex items-center gap-2 py-1 border-b border-gray-800 last:border-0">
+                          <span className="text-xs text-gray-400 w-28 shrink-0 truncate">{displayName}</span>
+                          {answerEdits[a.id] !== undefined ? (
+                            <>
+                              <input
+                                value={answerEdits[a.id]}
+                                onChange={(e) => setAnswerEdits((ed) => ({ ...ed, [a.id]: e.target.value }))}
+                                onKeyDown={(e) => e.key === "Enter" && saveAnswer(a.id, answerEdits[a.id])}
+                                className="flex-1 bg-gray-700 border border-gray-600 rounded px-2 py-0.5 text-white text-xs focus:outline-none focus:border-amber-500"
+                              />
+                              <button
+                                onClick={() => saveAnswer(a.id, answerEdits[a.id])}
+                                className="text-xs text-emerald-400 hover:text-emerald-300 shrink-0"
+                              >
+                                Save
+                              </button>
+                              <button
+                                onClick={() => setAnswerEdits((ed) => { const n = { ...ed }; delete n[a.id]; return n; })}
+                                className="text-xs text-gray-600 hover:text-gray-400 shrink-0"
+                              >
+                                Cancel
+                              </button>
+                            </>
+                          ) : (
+                            <>
+                              <span className="flex-1 text-xs text-white font-mono truncate">{a.answer}</span>
+                              <button
+                                onClick={() => setAnswerEdits((ed) => ({ ...ed, [a.id]: a.answer }))}
+                                className="text-xs text-gray-500 hover:text-amber-400 shrink-0 transition-colors"
+                              >
+                                Edit
+                              </button>
+                            </>
+                          )}
+                          {answerSaveStatus[a.id] && (
+                            <span className="text-xs text-gray-400 shrink-0">{answerSaveStatus[a.id]}</span>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
 
               {/* Resolve row (only for unresolved) */}
               {!q.resolved_at && (
