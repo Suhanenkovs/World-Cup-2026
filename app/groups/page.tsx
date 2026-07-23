@@ -6,7 +6,7 @@ import Link from "next/link";
 import type { MatchWithTeams } from "@/types/database";
 import AutoRefresh from "@/components/AutoRefresh";
 
-export const revalidate = 60;
+export const revalidate = 86400;
 
 // â”€â”€ Standings computed from DB finished matches only â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 

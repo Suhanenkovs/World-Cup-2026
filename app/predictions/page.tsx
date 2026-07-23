@@ -6,7 +6,7 @@ import PredictionsGrid from "@/components/PredictionsGrid";
 import TabSwitcher from "@/components/TabSwitcher";
 import Link from "next/link";
 
-export const revalidate = 0;
+export const revalidate = 86400;
 
 export default async function PredictionsPage({
   searchParams,

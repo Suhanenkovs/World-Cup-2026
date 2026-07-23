@@ -7,7 +7,7 @@ import type { MatchWithTeams } from "@/types/database";
 import Link from "next/link";
 import { BackButton } from "@/components/BackButton";
 
-export const revalidate = 300;
+export const revalidate = 86400;
 
 // ── football-data.org types ────────────────────────────────────────────────
 
@@ -40,7 +40,7 @@ async function fetchScorers(): Promise<FDScorer[]> {
   try {
     const res = await fetch("https://api.football-data.org/v4/competitions/WC/scorers?limit=100", {
       headers: { "X-Auth-Token": process.env.FOOTBALL_DATA_API_KEY! },
-      next: { revalidate: 300 },
+      next: { revalidate: 86400 },
     });
     if (!res.ok) return [];
     const json = await res.json();

@@ -6,7 +6,7 @@ import AutoRefresh from "@/components/AutoRefresh";
 import TabSwitcher from "@/components/TabSwitcher";
 import Link from "next/link";
 
-export const revalidate = 60;
+export const revalidate = 86400;
 
 export default async function MatchesPage({
   searchParams,

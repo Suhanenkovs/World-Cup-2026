@@ -1,5 +1,5 @@
 ﻿import { getFlagUrl } from "@/lib/teamFlags";
-export const revalidate = 300;
+export const revalidate = 86400;
 
 interface FDScorer {
   player: { id: number; name: string; nationality: string | null };
@@ -14,7 +14,7 @@ async function fetchScorers(): Promise<FDScorer[]> {
   try {
     const res = await fetch("https://api.football-data.org/v4/competitions/WC/scorers?limit=100", {
       headers: { "X-Auth-Token": process.env.FOOTBALL_DATA_API_KEY! },
-      next: { tags: ["scorers"] },
+      next: { tags: ["scorers"], revalidate: 86400 },
     });
     if (!res.ok) return [];
     const json = await res.json();

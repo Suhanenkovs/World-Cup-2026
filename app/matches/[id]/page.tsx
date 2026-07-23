@@ -8,7 +8,7 @@ import { getFlagUrl } from "@/lib/teamFlags";
 import Link from "next/link";
 import AutoRefresh from "@/components/AutoRefresh";
 
-export const revalidate = 0;
+export const revalidate = 86400;
 
 export default async function MatchDetailPage({
   params,

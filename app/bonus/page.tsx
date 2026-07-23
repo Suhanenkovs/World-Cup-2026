@@ -6,7 +6,7 @@ import BonusForm from "@/components/BonusForm";
 import BonusAllAnswers from "@/components/BonusAllAnswers";
 import TabSwitcher from "@/components/TabSwitcher";
 
-export const revalidate = 0;
+export const revalidate = 86400;
 
 export default async function BonusPage({
   searchParams,

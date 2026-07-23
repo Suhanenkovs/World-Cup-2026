@@ -5,7 +5,7 @@ import { formatInTimeZone } from "date-fns-tz";
 import { STAGE_LABELS, POINTS_EXACT_SCORE, POINTS_GOAL_DIFF, type Stage } from "@/lib/constants";
 import Link from "next/link";
 
-export const revalidate = 60;
+export const revalidate = 86400;
 
 function qualityLabel(pts: number, stage: Stage) {
   if (pts >= POINTS_EXACT_SCORE[stage]) return { text: "Exact", cls: "text-yellow-400" };
