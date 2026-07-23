@@ -13,7 +13,7 @@ export default async function MatchesPage({
 }: {
   searchParams: Promise<{ tab?: string }>;
 }) {
-  const { tab = "upcoming" } = await searchParams;
+  const { tab = "results" } = await searchParams;
   const supabase = await createClient();
 
   const { data: matches } = await supabase

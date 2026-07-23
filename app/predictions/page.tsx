@@ -13,7 +13,7 @@ export default async function PredictionsPage({
 }: {
   searchParams: Promise<{ tab?: string }>;
 }) {
-  const { tab = "upcoming" } = await searchParams;
+  const { tab = "results" } = await searchParams;
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");

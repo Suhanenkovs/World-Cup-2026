@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState } from "react";
 import type { Profile, BonusQuestion } from "@/types/database";
 
 interface PrizeConfig {
@@ -46,7 +46,6 @@ export default function AdminPanel({ players, questions, prizeConfig, tab }: Pro
   const [resetStatus, setResetStatus] = useState<Record<string, string>>({});
   const [bonusAnswers, setBonusAnswers] = useState<Record<string, string>>({});
   const [bonusStatus, setBonusStatus] = useState<Record<string, string>>({});
-  const [autoResolveStatus, setAutoResolveStatus] = useState("");
 
   // Bonus question management
   const [bonusQs, setBonusQs] = useState<BonusQuestion[]>(questions);
@@ -55,7 +54,6 @@ export default function AdminPanel({ players, questions, prizeConfig, tab }: Pro
   const [qStatus, setQStatus] = useState<Record<string, string>>({});
   const [showAddQ, setShowAddQ] = useState(false);
   const [newQ, setNewQ] = useState({ question: "", category: "", max_points: "10", answer_type: "text" as BonusQuestion["answer_type"], optionsText: "" });
-  const [isPending, startTransition] = useTransition();
 
   // Prize config editing state
   const [entryFee, setEntryFee] = useState(String(prizeConfig.entry_fee));
@@ -214,19 +212,6 @@ export default function AdminPanel({ players, questions, prizeConfig, tab }: Pro
     }));
   }
 
-  async function autoResolve() {
-    setAutoResolveStatus("Fetching from football-data.org…");
-    startTransition(async () => {
-      const res = await fetch("/api/admin/auto-resolve", { method: "POST" });
-      const json = await res.json();
-      if (!json.success) { setAutoResolveStatus(`Error: ${json.error}`); return; }
-      const resolved = json.results.filter((r: { answer: string | null }) => r.answer !== null);
-      const skipped  = json.results.filter((r: { answer: string | null }) => r.answer === null);
-      setAutoResolveStatus(
-        `Done — ${resolved.length} resolved, ${skipped.length} need manual input.`
-      );
-    });
-  }
 
   function startEditQ(q: BonusQuestion) {
     setEditingQ(q.id);
@@ -281,40 +266,7 @@ export default function AdminPanel({ players, questions, prizeConfig, tab }: Pro
     }
   }
 
-  async function triggerSync() {
-    startTransition(async () => {
-      const res = await fetch("/api/cron/sync-scores", {
-        headers: { Authorization: `Bearer ${process.env.NEXT_PUBLIC_CRON_SECRET ?? ""}` },
-      });
-      const json = await res.json();
-      alert(`Sync complete: ${json.synced} matches updated, ${json.scored} predictions scored`);
-    });
-  }
 
-  const [rescoreStatus, setRescoreStatus] = useState("");
-
-  async function rescoreAll() {
-    if (!confirm("Rescore all finished matches? This overwrites all existing points with freshly calculated values.")) return;
-    setRescoreStatus("Rescoring…");
-    const res = await fetch("/api/admin/rescore", { method: "POST" });
-    const json = await res.json();
-    setRescoreStatus(json.success
-      ? `Done — ${json.rescored} predictions rescored across ${json.matches} matches.`
-      : `Error: ${json.error}`);
-  }
-
-  type AuditRow = { player: string; match: string; pick: string; stored_pts: number; correct_pts: number; diff: number };
-  const [auditResult, setAuditResult] = useState<{ total: number; discrepancies: AuditRow[] } | null>(null);
-  const [auditLoading, setAuditLoading] = useState(false);
-
-  async function runAudit() {
-    setAuditLoading(true);
-    setAuditResult(null);
-    const res = await fetch("/api/admin/score-audit");
-    const json = await res.json();
-    setAuditResult(json);
-    setAuditLoading(false);
-  }
 
   return (
     <div className="flex flex-col gap-8">
@@ -512,76 +464,7 @@ export default function AdminPanel({ players, questions, prizeConfig, tab }: Pro
         </div>
       </div>
 
-      {/* Manual sync */}
-      <div className="bg-gray-900 border border-gray-800 rounded-xl p-5">
-        <h2 className="text-lg font-semibold text-white mb-2">Score Sync</h2>
-        <p className="text-sm text-gray-400 mb-3">
-          Automatically runs every 5 minutes via cron-job.org during match windows. Trigger manually here if needed.
-        </p>
-        <div className="flex flex-wrap gap-2">
-          <button
-            onClick={triggerSync}
-            disabled={isPending}
-            className="bg-gray-700 hover:bg-gray-600 disabled:opacity-40 text-white text-sm px-4 py-2 rounded-lg transition-colors"
-          >
-            {isPending ? "Syncing…" : "Sync scores now"}
-          </button>
-          <button
-            onClick={rescoreAll}
-            disabled={isPending}
-            className="bg-red-900/60 hover:bg-red-800/60 disabled:opacity-40 text-red-300 text-sm px-4 py-2 rounded-lg transition-colors"
-          >
-            Rescore all
-          </button>
-          <button
-            onClick={runAudit}
-            disabled={auditLoading}
-            className="bg-amber-900/60 hover:bg-amber-800/60 disabled:opacity-40 text-amber-300 text-sm px-4 py-2 rounded-lg transition-colors"
-          >
-            {auditLoading ? "Auditing…" : "Audit scores"}
-          </button>
-        </div>
-        {rescoreStatus && <p className="text-sm text-gray-400 mt-2">{rescoreStatus}</p>}
-        {auditResult && (
-          <div className="mt-3">
-            {auditResult.total === 0 ? (
-              <p className="text-sm text-emerald-400">All {auditResult.total === 0 ? "stored" : auditResult.total} scores match — no discrepancies found.</p>
-            ) : (
-              <div>
-                <p className="text-sm text-red-400 mb-2">{auditResult.total} discrepancy/ies found:</p>
-                <div className="overflow-x-auto">
-                  <table className="text-xs text-gray-300 w-full">
-                    <thead>
-                      <tr className="text-gray-500 border-b border-white/10">
-                        <th className="text-left pb-1 pr-4">Player</th>
-                        <th className="text-left pb-1 pr-4">Match</th>
-                        <th className="text-left pb-1 pr-4">Pick</th>
-                        <th className="text-left pb-1 pr-4">Stored</th>
-                        <th className="text-left pb-1 pr-4">Correct</th>
-                        <th className="text-left pb-1">Diff</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-white/5">
-                      {auditResult.discrepancies.map((r, i) => (
-                        <tr key={i}>
-                          <td className="py-1 pr-4 font-medium">{r.player}</td>
-                          <td className="py-1 pr-4">{r.match}</td>
-                          <td className="py-1 pr-4 font-mono">{r.pick}</td>
-                          <td className="py-1 pr-4">{r.stored_pts ?? "null"}</td>
-                          <td className="py-1 pr-4 text-emerald-400">{r.correct_pts}</td>
-                          <td className={`py-1 font-semibold ${r.diff > 0 ? "text-emerald-400" : "text-red-400"}`}>{r.diff > 0 ? "+" : ""}{r.diff}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-                <p className="text-xs text-gray-500 mt-2">Run &quot;Rescore all&quot; to fix these automatically.</p>
-              </div>
-            )}
-          </div>
-        )}
-      </div>
-      </>}
+</>}
       {tab === "bonus" && <>
       {/* Bonus Questions management */}
       <div className="bg-gray-900 border border-gray-800 rounded-xl p-5">
@@ -723,15 +606,6 @@ export default function AdminPanel({ players, questions, prizeConfig, tab }: Pro
           ))}
         </div>
 
-        {/* Auto-resolve */}
-        <div className="mt-5 pt-5 border-t border-gray-800">
-          <p className="text-xs text-gray-500 mb-2">Auto-resolve from football-data.org (tournament winner, finalists, top scorer, group goals). Multi-answer questions are handled automatically — both finalists and tied teams are accepted.</p>
-          <button onClick={autoResolve} disabled={isPending}
-            className="bg-gray-700 hover:bg-gray-600 disabled:opacity-40 text-white text-sm px-4 py-2 rounded-lg transition-colors">
-            {isPending ? "Resolving…" : "Auto-resolve All"}
-          </button>
-          {autoResolveStatus && <p className="text-sm text-gray-400 mt-2">{autoResolveStatus}</p>}
-        </div>
       </div>
 
       </>}
