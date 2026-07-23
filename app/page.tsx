@@ -6,7 +6,7 @@ import { redirect } from "next/navigation";
 export default async function LandingPage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (user) redirect("/predictions");
+  if (user) redirect("/bracket");
 
   return (
     <div className="min-h-[80vh] flex flex-col items-center justify-center px-4 text-center">
